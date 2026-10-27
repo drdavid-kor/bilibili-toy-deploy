@@ -2,7 +2,7 @@
 
 把 GitHub 上的静态网页项目接入哔哩哔哩 Toy。这个仓库提供 GitHub Action、纯 HTML 与 Vite 起点、已有项目接入示例，以及帮助编程助手完成适配的 `toy-github` Skill。它调用 B 站官方 `toy` CLI；B 站接受提审后仍需等待平台审核。
 
-**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`。请先确认该标签已经公开发布；标签不存在时，示例不能在其他仓库运行。托管 Runner 的认证和真实 Toy 发布验收状态以[验证记录](docs/verification/upstream-contract.md)及 GitHub Actions 运行结果为准，不以源码存在代替验证。
+**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`。请先确认该标签已经公开发布；标签不存在时，示例不能在其他仓库运行。托管 Runner 的认证和真实 Toy 发布状态见[验收记录](docs/verification/acceptance.md)；不以源码存在代替验证。
 
 ## 选择上手路径
 
@@ -64,13 +64,13 @@ npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github
 python3 -m unittest discover -s tests -v
 ```
 
-[开发方案](docs/development-plan.md)记录了需求与验收标准；[上游 CLI 契约记录](docs/verification/upstream-contract.md)列出已核对的版本和仍需真实运行验证的行为；[原始调研](docs/references/bili-toys-publish.original.md)仅作背景。仓库代码使用 [MIT 许可](LICENSE)，随附的官方预检脚本归属及来源见 `vendor/`。
+[开发方案](docs/development-plan.md)记录了需求与验收标准；[验收记录](docs/verification/acceptance.md)区分已完成与待验证项目；[上游 CLI 契约记录](docs/verification/upstream-contract.md)列出已核对的版本；[原始调研](docs/references/bili-toys-publish.original.md)仅作背景。仓库代码使用 [MIT 许可](LICENSE)，随附的官方预检脚本归属及来源见 `vendor/`。
 
 ## English
 
 Connect a static GitHub web project to Bilibili Toy with an Action, HTML and Vite starters, React/Vue examples, and a `toy-github` onboarding skill. The Action wraps the official `toy` CLI. “Submitted for review” means Bilibili accepted the request; it does not mean the version is live.
 
-The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`. **Check that this tag is publicly available before using the example in another repository.** Current verification evidence is in the [upstream contract record](docs/verification/upstream-contract.md); source code alone does not establish hosted-runner or live Toy acceptance.
+The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`. **Check that this tag is publicly available before using the example in another repository.** See the [acceptance record](docs/verification/acceptance.md) for current hosted-runner and live Toy evidence; source code alone does not establish acceptance.
 
 ### Choose a path
 
@@ -101,4 +101,4 @@ npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github
 
 Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md)
 
-Run local tests with `python3 -m unittest discover -s tests -v`. The [plan](docs/development-plan.md), [CLI contract record](docs/verification/upstream-contract.md), and [MIT license](LICENSE) provide implementation context.
+Run local tests with `python3 -m unittest discover -s tests -v`. The [plan](docs/development-plan.md), [acceptance record](docs/verification/acceptance.md), [CLI contract record](docs/verification/upstream-contract.md), and [MIT license](LICENSE) provide implementation context.

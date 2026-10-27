@@ -338,7 +338,9 @@ def write_operation(args):
         summary('Submission record / 提交记录: Deployment `'+str(rec['id'])+'`. If interrupted, use resolve-unknown after checking Bilibili.')
         try:
             result=toy.call(argv,write=True)
-            if not valid_int(result.get('id')) or not isinstance(result.get('status'),str):raise Unknown('Submission response lacks ID or status; check Bilibili before retrying.')
+            if not valid_int(result.get('id')) or not isinstance(result.get('status'),str):
+                shape={k:type(v).__name__ for k,v in result.items()}
+                raise Unknown('Submission response lacks ID or status; check Bilibili before retrying. Response fields: '+canonical(shape))
             if chosen and result['id']!=chosen['id']:raise Unknown('Submission returned an unexpected Toy ID; reconcile manually.')
         except Unknown:
             try:gh.status(rec,'error','Result unknown; verify on Bilibili before manual recovery')
