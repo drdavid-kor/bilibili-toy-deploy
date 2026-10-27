@@ -223,6 +223,16 @@ class ActionTests(unittest.TestCase):
         self.assertTrue(toy.closed)
         self.assertTrue(action.jsonfile(path / "manifest.json")["preview"])
 
+    def test_live_update_status_only_receipt_uses_verified_existing_id(self):
+        path = self.bundle()
+        self.mark_preview(path)
+        gh, toy = FakeGitHub([self.binding()]), FakeToy(response={"status": "auditing"})
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+            action.write_operation(self.operation_args(path))
+        self.assertEqual(len(toy.calls), 1)
+        self.assertEqual(gh.statuses[-1][1], "success")
+        self.assertFalse(any(x["payload"]["kind"] == "binding" for x in gh.saved))
+
     def test_unknown_write_is_recorded_and_never_retried(self):
         path = self.bundle()
         self.mark_preview(path)

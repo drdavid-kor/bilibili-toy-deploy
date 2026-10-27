@@ -34,5 +34,8 @@
     "id": 42,
     "status": "reviewing",
     "preview_url": "https://www.bilibili.com/toy/preview/example-toy/index.html"
+  },
+  "update_accepted_live_v064": {
+    "status": "auditing"
   }
 }

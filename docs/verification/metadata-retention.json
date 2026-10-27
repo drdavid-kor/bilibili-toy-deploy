@@ -1,0 +1,33 @@
+{
+  "toy_id": 48653775407104,
+  "update_run": 40539309434,
+  "recovery_deployment": 7363929796,
+  "page_observation": "Published Toy page contains Revision 2 text; verified in browser on 2026-10-28 Asia/Shanghai.",
+  "metadata_retained": {
+    "id": true,
+    "title": true,
+    "category": true,
+    "visibility": true,
+    "poster_url_sha256": true,
+    "icon_url_sha256": true
+  },
+  "before": {
+    "id": 48653775407104,
+    "title": "GitHub 到 Toy 发布流程演示",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "status": "published",
+    "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
+    "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+  },
+  "after": {
+    "id": 48653775407104,
+    "title": "GitHub 到 Toy 发布流程演示",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "status": "published",
+    "mtime": 1793117838,
+    "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
+    "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+  }
+}
