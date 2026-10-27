@@ -210,6 +210,26 @@ class ActionTests(unittest.TestCase):
         with self.assertRaisesRegex(action.Failure, "another Toy account"):
             action.resolve_target(FakeGitHub([self.binding(account="other")]), toy, {"slug": "demo"}, "account-hash", SHA)
 
+    def test_new_toy_requires_both_images_before_preview_or_record(self):
+        path = self.bundle()
+        gh, toy = FakeGitHub(), FakeToy(items=[])
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+            with self.assertRaisesRegex(action.Failure, "create.poster and create.icon"):
+                action.write_operation(self.operation_args(path, mode="preview"))
+        self.assertEqual(toy.calls, [])
+        self.assertEqual(gh.saved, [])
+        self.assertTrue(toy.closed)
+
+    def test_query_failure_never_falls_back_to_new_toy_creation(self):
+        path = self.bundle()
+        gh, toy = FakeGitHub(), FakeToy(items=[])
+        with patch.object(toy, "toys", side_effect=action.Failure("Toy query failed")):
+            with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+                with self.assertRaisesRegex(action.Failure, "Toy query failed"):
+                    action.write_operation(self.operation_args(path, mode="preview"))
+        self.assertEqual(toy.calls, [])
+        self.assertEqual(gh.saved, [])
+
     def test_preview_update_omits_all_metadata_flags(self):
         path = self.bundle()
         gh, toy = FakeGitHub([self.binding()]), FakeToy(response={"preview_url": "https://www.bilibili.com/toy/preview/demo"})
@@ -231,6 +251,17 @@ class ActionTests(unittest.TestCase):
             action.write_operation(self.operation_args(path))
         self.assertEqual(len(toy.calls), 1)
         self.assertEqual(gh.statuses[-1][1], "success")
+        self.assertFalse(any(x["payload"]["kind"] == "binding" for x in gh.saved))
+
+    def test_live_update_rejects_a_different_returned_toy_id(self):
+        path = self.bundle()
+        self.mark_preview(path)
+        gh, toy = FakeGitHub([self.binding()]), FakeToy(response={"id": 43, "status": "auditing"})
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+            with self.assertRaisesRegex(action.Unknown, "unexpected Toy ID"):
+                action.write_operation(self.operation_args(path))
+        self.assertEqual(len(toy.calls), 1)
+        self.assertEqual([state for _, state, _ in gh.statuses], ["in_progress", "error"])
         self.assertFalse(any(x["payload"]["kind"] == "binding" for x in gh.saved))
 
     def test_unknown_write_is_recorded_and_never_retried(self):
@@ -266,6 +297,34 @@ class ActionTests(unittest.TestCase):
             with self.assertRaisesRegex(action.Failure, "Previous write outcome is unknown"):
                 action.write_operation(self.operation_args(path))
         self.assertEqual(toy.calls, [])
+
+    def test_unknown_recovery_requires_same_toy_target_and_sends_no_write(self):
+        record = {"id": 9, "payload": {
+            "tool": action.TOOL, "kind": "submission", "sha": SHA,
+            "slug": "demo", "account": "account-hash", "toy_id": 42,
+        }}
+
+        class RecoveryGitHub(FakeGitHub):
+            def call(self, path):
+                if path == "deployments/9":
+                    return record
+                return super().call(path)
+
+        args = SimpleNamespace(deployment_id=9, resolution="accepted")
+        gh, wrong_toy = RecoveryGitHub(states={9: "error"}), FakeToy(items=[{"id": 43, "slug": "demo"}])
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=wrong_toy):
+            with self.assertRaisesRegex(action.Failure, "differs from original request"):
+                action.resolve_unknown(args)
+        self.assertEqual(gh.saved, [])
+        self.assertEqual(gh.statuses, [])
+        self.assertEqual(wrong_toy.calls, [])
+
+        gh, correct_toy = RecoveryGitHub(states={9: "error"}), FakeToy()
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=correct_toy):
+            action.resolve_unknown(args)
+        self.assertEqual(gh.saved[0]["payload"]["toy_id"], 42)
+        self.assertEqual([state for _, state, _ in gh.statuses], ["success", "success"])
+        self.assertEqual(correct_toy.calls, [])
 
     def test_manual_override_cannot_run_from_release_event(self):
         path = self.bundle()

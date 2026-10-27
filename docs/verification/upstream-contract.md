@@ -1,6 +1,6 @@
 # Toy CLI upstream contract, 2026-10-27
 
-This note records public upstream evidence for the first implementation. It does not establish that a GitHub-hosted runner can authenticate or that the server retains every omitted field; those need live tests with an authorized test Toy.
+This note records public upstream evidence and the CLI response shape observed with v0.6.4. Hosted-runner and server-side results are tracked separately in [acceptance.md](acceptance.md); a CLI fixture alone cannot prove platform behavior.
 
 ## Pinned sources and binaries
 
@@ -25,10 +25,11 @@ For `--json`, the official [DSH fake CLI](https://github.com/bilibili/toy/blob/a
 | `mylist --json --page N --size M` | `total`, `pn`, `ps`, `list` | Require list array and coherent pagination. Query all pages before declaring a slug absent. |
 | `mylist` item | `id`, `title`, `url`, `status`, `visibility`, optional metadata | The DSH adapter derives slug from `/toy/<slug>/` in `url`; it does not rely on a top-level `slug`. A missing or malformed URL makes automatic slug matching inconclusive. |
 | `create/update <path> --json` | `preview_url` | Preview only. No Toy ID or accepted submission is implied. |
-| `create/update <path> --json --yes` | `id`, `status`, possibly `preview_url` | Require positive ID and a successful CLI exit before recording submission. A returned status such as `reviewing` does not mean online. |
-| `update <id> --title ... --json --yes` (without `path`) | `id`, `status` | Direct metadata submission; no package preview is produced. |
+| `create <path> --json --yes` | `id`, `status`, possibly `preview_url` | Require a new positive ID and successful CLI exit before recording first creation. A status such as `auditing` does not mean online. |
+| `update <id> <path> --json --yes` | Observed live v0.6.4 response: `{"status":"auditing"}` without `id` | Before writing, verify the existing Toy ID, account and slug. On successful exit and nonempty status, use that already verified ID; do not require the CLI to repeat it. |
+| `update <id> --title ... --json --yes` (without `path`) | Observed local v0.6.4 response: `{"status":"auditing"}` without `id` | Direct metadata submission; no package preview is produced. Verify the target before writing. |
 
-The official [DSH argv builder](https://github.com/bilibili/toy/blob/ae156ecb3391dfb22bdd93d45d6b0067e1e5b723/dsh/packages/toy/src/argv.js) only adds update metadata flags when explicitly supplied. This verifies client behavior; the server's final retention of omitted fields still requires a live before/after check. The v0.6.4 help lists category choices `GAME`, `INTERACTIVE_PLAY`, `TOOL`, `TEST`, `GUIDE`, `COLLECTION`, `OTHER` and visibility choices `link-only`, `password`, `public`. The `update` command does not expose `--slug`.
+The official [DSH argv builder](https://github.com/bilibili/toy/blob/ae156ecb3391dfb22bdd93d45d6b0067e1e5b723/dsh/packages/toy/src/argv.js) only adds update metadata flags when explicitly supplied. A live content update of the test Toy retained its title, category, visibility, poster URL and icon URL in the [before/after snapshot](metadata-retention.json); this is evidence for that Toy and update, not a universal guarantee for future platform versions. The v0.6.4 help lists category choices `GAME`, `INTERACTIVE_PLAY`, `TOOL`, `TEST`, `GUIDE`, `COLLECTION`, `OTHER` and visibility choices `link-only`, `password`, `public`. The `update` command does not expose `--slug`.
 
 The CLI strips the upstream `{code,message,data}` envelope on successful JSON calls; do not expect an outer `data` member. For failed calls, the official [error reference](https://github.com/bilibili/toy/blob/ae156ecb3391dfb22bdd93d45d6b0067e1e5b723/skills/toy/references/error-codes.md) distinguishes session expiry (`307001`, `307029`), business errors (`status=<n> code=<n> message=...`), usage errors, and ambiguous network failures. A write call that times out or returns invalid output after launch is an unknown result, not proof that nothing was submitted.
 
@@ -44,5 +45,5 @@ The checker is advisory for rendering and only captures static issues. It does n
 2. Treat `--help-json` as a version check for required commands and flags, not as a substitute for integration tests of server behavior.
 3. Query `mylist` through every page and require an identifiable slug before automatic adoption. If list fields or pagination differ from the fixture, parse the live response conservatively and save a sanitized fixture for tests.
 4. Package the built static directory deterministically as a ZIP with root `index.html`, fingerprint the archive, and pass that exact ZIP to preview and submission.
-5. Send metadata flags on `create` or the explicit metadata-sync operation only. Verify omitted fields survive ordinary `update` before claiming that behavior.
+5. Send metadata flags on `create` or the explicit metadata-sync operation only. Ordinary `update` preserved those fields in one live test; keep the behavior covered by versioned tests and repeat after CLI/platform changes.
 6. Never expose session material, access passwords, or unreviewed preview URLs in repository records or logs.

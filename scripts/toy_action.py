@@ -292,6 +292,7 @@ def write_operation(args):
         chosen=resolve_target(gh,toy,cfg,account,sha)
         if manifest.get('toy_id') and (not chosen or chosen['id']!=manifest['toy_id']):raise Failure('Preview Toy identity changed')
         if args.mode=='sync-metadata' and not chosen:raise Failure('Metadata sync needs an existing Toy')
+        if not chosen and any(name not in cfg['create'] for name in ('poster','icon')):raise Failure('New Toy initialization requires create.poster and create.icon in this Action. Copy the starter toy-assets directory or provide your own images.')
         if args.mode=='preview':
             if not manifest.get('package_sha'):raise Failure('Preview bundle has no package')
             doctor(bundle/'package.zip',cfg['slug'])

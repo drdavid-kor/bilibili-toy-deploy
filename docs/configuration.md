@@ -49,6 +49,8 @@
 
 示例工作流的手动入口可选 `preview`、`submit`、`override`、`sync-metadata`、`resolve-unknown`。手动 `submit` 和 `override` 必须填现有已发布、非预发行版的 `release-tag`；手动 `preview` 可填处于默认分支历史中的 `source-ref`，留空则使用默认分支。PR 仅检查。工作流成功时应显示“已提交审核”，不能据此判断新版已上线。若前一版尚在审核，新 Release 仍可提交；平台是否接受由 B 站决定。同一 Toy 的写操作串行进行。
 
+示例工作流使用 GitHub [concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency)，将同一仓库的 Toy 写操作放进一个组，设置 `cancel-in-progress: false` 与 `queue: max`，以排队而非取消后续运行。GitHub 每组最多保留 100 个待运行任务，超出时会取消新任务。这只控制 GitHub 工作流的并发，不表示等待 B 站完成审核。
+
 独立 Action 的 `expose-preview` 默认为 `false`，不在 Summary 输出预览 URL；示例工作流将它明确设为 `true`，以便从 Actions 页打开预览。预览 URL 含可访问内容的能力链接，公开仓库的运行 Summary 和 Artifact 可被他人看到。只把可以公开分享的网页包放入示例流程；若内容尚需保密，先使用私有仓库并审查访问者，或使用自己的预览交付方式。把选项改成 `false` 会隐藏 URL，也会使本示例无法通过 Summary 打开预览。
 
 ## 关联和恢复
