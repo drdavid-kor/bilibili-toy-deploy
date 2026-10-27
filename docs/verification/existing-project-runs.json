@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28 Asia/Shanghai",
+  "fixture": "Synthetic existing React frontend based on prior Skill forward test; not a stranger production project",
+  "repository": "drdavid-kor/bilibili-toy-existing-example (private)",
+  "action_beta1_sha": "d6c5ca66935291bffb3fdc987720ef562e087d51",
+  "action_beta2_sha": "cc33f7563e3d2f4223eaebc7da6574e384411c7e",
+  "baseline_sha": "03c788c1d6c3582f900e18b77581956e441aa3d9",
+  "adaptation_sha": "9c62541f51ce91730e9d0bc5a073b0bd444030bd",
+  "revision2_content_sha": "d5ea124fc326c047d046000f3300098c539085b6",
+  "beta2_consumer_sha": "16bb32e24ed6d3fc97a19d2ef36dbf9f48a8780b",
+  "toy_id": 48661048331264,
+  "first_submission": {
+    "preview_run": 40543159871,
+    "release_run": 40543437543,
+    "preview_deployment": 7364500931,
+    "submission_deployment": 7364535382,
+    "binding_deployment": 7364537020,
+    "package_sha256": "850e3c841e11fc134ea8ec4c08407f9772ec01faabaefc1fc67d4a84e994631b",
+    "release_tag": "verification-v1",
+    "build_skipped_on_release": true
+  },
+  "second_submission": {
+    "preview_run": 40545113514,
+    "release_run": 40545337475,
+    "preview_deployment": 7364784697,
+    "submission_deployment": 7364811138,
+    "package_sha256": "b9104cf18fb7cfecf89ae7688a2d525c2875c377ab27eeaf83efd9988cf8b227",
+    "release_tag": "verification-v2",
+    "build_skipped_on_release": true
+  },
+  "beta1_auditing_edge": {
+    "failed_preview_run": 40543593753,
+    "failed_attempt": 1,
+    "toy_write_sent": false,
+    "cause": "Owner-verified auditing list item omitted url and slug",
+    "later_safe_rerun_attempt": 2,
+    "later_preview_success": true
+  },
+  "metadata_after_v2": "Title/category/visibility/theme/watermark matched before snapshot; poster/icon URL omitted by platform while auditing",
+  "limits": "Accepted submission only; approval and live revision 2 not established. Private repo run links require access. No independent human user test."
+}

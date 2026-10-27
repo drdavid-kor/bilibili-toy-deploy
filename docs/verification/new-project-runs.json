@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-28 Asia/Shanghai",
+  "repository": "drdavid-kor/bilibili-toy-action-example (private)",
+  "source": "Scaffold from published v0.1.0-beta.1 into an independent Vite repository",
+  "first_preview_and_creation": [
+    {
+      "deployment_id": 7364430370,
+      "state": "success",
+      "kind": "binding",
+      "run_id": "40542720575",
+      "sha": "1ed01663f0a6ea47af8d67019e77ac236b5a2e83",
+      "slug": "toy-action-starter-20261028",
+      "toy_id": 48659928451072
+    },
+    {
+      "deployment_id": 7364429248,
+      "state": "success",
+      "kind": "submission",
+      "run_id": "40542720575",
+      "sha": "1ed01663f0a6ea47af8d67019e77ac236b5a2e83",
+      "slug": "toy-action-starter-20261028",
+      "toy_id": null,
+      "package_sha": "8cb98cf95bb47dac275b4115a84fb066e557ffd3c73ee28dd50c0684849d25e9",
+      "release_id": "425723539"
+    },
+    {
+      "deployment_id": 7364281567,
+      "state": "success",
+      "kind": "preview",
+      "run_id": "40541670908",
+      "sha": "1ed01663f0a6ea47af8d67019e77ac236b5a2e83",
+      "slug": "toy-action-starter-20261028",
+      "toy_id": null,
+      "package_sha": "8cb98cf95bb47dac275b4115a84fb066e557ffd3c73ee28dd50c0684849d25e9"
+    }
+  ],
+  "invalid_secret_run": 40542938062,
+  "invalid_secret_result": "Explicit session expiry error; no review submission",
+  "restored_secret_and_second_update": [
+    {
+      "id": 7364512372,
+      "state": "success",
+      "kind": "submission",
+      "run_id": "40543278017",
+      "sha": "3cec8c72824397a8b8b4f21ef35d329442ff9d6a",
+      "package_sha": "4e6091c1c56fe43f3500688ffaed5ef948e156d60b1962dd30deba1d4d863d82",
+      "toy_id": 48659928451072
+    },
+    {
+      "id": 7364488908,
+      "state": "success",
+      "kind": "preview",
+      "run_id": "40543078704",
+      "sha": "3cec8c72824397a8b8b4f21ef35d329442ff9d6a",
+      "package_sha": "4e6091c1c56fe43f3500688ffaed5ef948e156d60b1962dd30deba1d4d863d82",
+      "toy_id": 48659928451072
+    }
+  ],
+  "browser_observation": "First preview loaded and counter changed from 0 to 1",
+  "limits": "Maintainer integration fixture, not independent human testing. Accepted submissions do not establish review approval. Private run links require access."
+}

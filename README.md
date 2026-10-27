@@ -2,7 +2,7 @@
 
 把 GitHub 上的静态网页项目接入哔哩哔哩 Toy。这个仓库提供 GitHub Action、纯 HTML 与 Vite 起点、已有项目接入示例，以及帮助编程助手完成适配的 `toy-github` Skill。它调用 B 站官方 `toy` CLI；B 站接受提审后仍需等待平台审核。
 
-**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。当前示例工作流固定引用 [`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)。外部仓库已用 beta.1 完成新建 Vite 路径；beta.2 和本人试用的状态见[验收记录](docs/verification/acceptance.md)。
+**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。[`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2) 已公开发布，示例工作流固定引用该标签。外部仓库已验证新建 Vite 与已有 React 项目的预览、首次提审和下一版本更新；本人试用仍待反馈，见[验收记录](docs/verification/acceptance.md)。
 
 ## 复制给编程助手
 
@@ -92,7 +92,7 @@ python3 -m unittest discover -s tests -v
 
 Connect a static GitHub web project to Bilibili Toy with an Action, HTML and Vite starters, React/Vue examples, and a `toy-github` onboarding skill. The Action wraps the official `toy` CLI. “Submitted for review” means Bilibili accepted the request; it does not mean the version is live.
 
-The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The current example workflow pins [`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2). A separate repository completed the new Vite path with beta.1; see the [acceptance record](docs/verification/acceptance.md) for beta.2 and the pending human trial.
+The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The current example workflow pins the public [`v0.1.0-beta.2` release](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2). Separate test repositories completed preview, first submission, and an update for a new Vite site and an adapted React site. The human trial is pending; see the [acceptance record](docs/verification/acceptance.md).
 
 ### Copy into your coding agent
 

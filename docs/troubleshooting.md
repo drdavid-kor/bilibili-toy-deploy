@@ -16,7 +16,7 @@
 | 提审结果待核实 | 原提交、包摘要、Toy ID/slug、B 站后台状态，以及运行 Summary 中的 Deployment ID | 先在 B 站核实**这一次请求**；然后在手动工作流选择 `resolve-unknown`，填写 `deployment-id` 和 `resolution=accepted` 或 `not-accepted`。该操作不重提 Toy |
 | 提审成功但关联保存失败 | Summary 中的 Toy ID、Deployment 权限和 GitHub API 错误 | 修复权限、显式补填 ID 或恢复记录；不要因记录失败再次提审 |
 
-`v0.1.0-beta.2` 的审核中作品处理逻辑：若仓库已有经核对的 binding（账号、Toy ID 与 slug），即使平台列表暂未给该作品 URL，也可用该绑定继续识别目标；这项修复仍需 CI 与外部仓库验证。若没有可信绑定，而列表中任一作品缺 URL，Action 仍停止自动创建或接管。显式 `toy_id` 也不能绕过缺 URL 时的归属与 slug 核对。首次创建已被平台接受、但 GitHub 关联保存失败且 URL 暂缺时，应保留已返回的 Toy ID 和 Deployment 记录，等能核实 URL 后恢复关联；不要把已接受的请求标为 `not-accepted`，也不要重新创建。
+`v0.1.0-beta.2` 的审核中作品处理逻辑：若仓库已有经核对的 binding（账号、Toy ID 与 slug），即使平台列表暂未给该作品 URL，也可用该绑定继续识别目标。修复已通过本地回归、CI 和外部 React 项目的普通更新；尚未在平台再次出现审核中缺 URL 时做同场景重测。若没有可信绑定，而列表中任一作品缺 URL，Action 仍停止自动创建或接管。显式 `toy_id` 也不能绕过缺 URL 时的归属与 slug 核对。首次创建已被平台接受、但 GitHub 关联保存失败且 URL 暂缺时，应保留已返回的 Toy ID 和 Deployment 记录，等能核实 URL 后恢复关联；不要把已接受的请求标为 `not-accepted`，也不要重新创建。
 
 对静态包，Toy 运行于 `/toy/<slug>/`，首页引用 `/assets/...` 容易指向站点根路径。Vite 可配置合适的 base，React/Vue 的 history 路由需要在静态环境下实际验证；示例采用 hash 路由。外部 API、第三方登录和浏览器存储不会因静态预检通过而自动兼容。
 
