@@ -1,0 +1,10 @@
+{
+  "slug": "vue-toy-example",
+  "directory": "dist",
+  "create": {
+    "title": "Vue Toy Example",
+    "category": "TOOL",
+    "visibility": "link-only"
+  },
+  "metadata": {}
+}

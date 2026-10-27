@@ -1,0 +1,10 @@
+{
+  "slug": "react-toy-example",
+  "directory": "dist",
+  "create": {
+    "title": "React Toy Example",
+    "category": "TOOL",
+    "visibility": "link-only"
+  },
+  "metadata": {}
+}

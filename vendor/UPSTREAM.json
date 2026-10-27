@@ -1,0 +1,13 @@
+{
+  "upstream_repository": "https://github.com/bilibili/toy",
+  "upstream_commit": "ae156ecb3391dfb22bdd93d45d6b0067e1e5b723",
+  "vendored_file": "skills/toy/scripts/toy_doctor.py",
+  "vendored_sha256": "cbbf1244fff1179cfa48272cddb2cbcbd870da73d5fff1c5f30720231d6eeb0c",
+  "license_file": "LICENSE",
+  "cli_version": "v0.6.4",
+  "cli_release_base": "https://boss.hdslb.com/toy-cli/toy/releases/v0.6.4",
+  "cli_checksums": {
+    "linux_amd64": "d5d1377ffd7b037fb23c3f48ba77c2230cd446976dec74930bf99fadfb0dcf94",
+    "darwin_arm64": "f2e5fc6610d70528420475f89b210bb76579e40ffc2f2b80dee50b869661436b"
+  }
+}

@@ -1,0 +1,14 @@
+# Adapt an existing frontend
+
+Use this for a project that already has code. The result should keep the application working while adding Toy compatibility and the published Action workflow.
+
+1. Read project instructions, package manifest, build config, router, public assets, existing workflows and current Git changes. Identify the actual build command and output directory. Preserve existing deployment paths and unrelated changes.
+2. Determine whether the output is static. Supported projects are plain HTML/CSS/JavaScript and Vite, including React and Vue. For other frameworks, report the specific export and runtime questions; do not promise automatic adaptation.
+3. Inspect paths and browser behavior: `/toy/<slug>/` is a subpath. Fix root-absolute assets and redirects, adjust Vite base where needed, and use hash routing or another genuinely working static route strategy. Preserve in-page hash anchors. Check fonts, dynamic imports, multiple entry pages and external API dependencies. Do not delete features or replace live requests with mock data to make precheck pass.
+4. Identify features that need a server, existing login provider or storage migration. Explain their impact and pause those dependent edits for the user's decision. Continue independent local changes that do not depend on that choice.
+5. Obtain the workflow, schema and examples from the same verified repository tag as the Action ref. Add or amend `.github/workflows/` without replacing unrelated jobs. Build commands stay explicit in the user's workflow; the Action receives built output.
+6. Configure target slug and optional existing Toy ID. Explain that a unique Toy with the same slug under the current account is adopted automatically if no ID was stored. A query failure or ambiguous match stops publication; it is not a reason to create a duplicate.
+7. Run the project's existing tests, build, Toy static precheck and a browser smoke check. For session setup, use the matching checkout's `scripts/set_secret.py --repo owner/name` after official `toy login` and `gh auth login`; it writes `TOY_SESSION_TOKEN` without displaying the value. If authorized and possible, run the main-branch preview and inspect the actual Toy page. Do not expose the session in the build job or logs.
+8. Summarize modifications, preserved behavior, test results, observed Toy preview, and any remaining blockers. Ordinary content updates preserve platform metadata; metadata synchronization is a separate manual operation.
+
+If the user's existing workflow already deploys elsewhere, add a separate Toy job or workflow unless there is a concrete reason to couple them. Use the matching release docs for precise commands and Secrets; never invent flag names.

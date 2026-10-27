@@ -1,0 +1,13 @@
+# New Toy project
+
+Use this when there is no application to adapt. The goal is a runnable minimal project plus the published Action workflow. Do not turn a feature idea into an entire application unless separately requested.
+
+1. Confirm the destination is new or empty. Check the relevant `AGENTS.md` files. Do not overwrite files in a nonempty directory.
+2. Select the plain HTML template by default; choose Vite when the user requests it or the existing conversation calls for React or Vue. Fetch the chosen template and workflow from a verified tag of `drdavid-kor/bilibili-toy-deploy`, matching the Action ref. Use `scripts/scaffold.py` from that checkout with `--template html|vite --destination <empty-directory> --slug <slug> --title <title>`. A repository clone is temporary and should not become a nested Git repository inside the user's project.
+3. Set a unique Toy slug, title, build output directory and available first-create metadata. Use the matching repository's `toy.config.json` schema. Initial visibility is `link-only` unless the user specifies otherwise. Leave session and passwords out of this file.
+4. Add only the matching published workflow to `.github/workflows/`. It must build the user project, run check on PR, create preview from the main branch, and submit on a published Release. A tag push alone does not submit. A manual override builds the exact selected Release commit and submits after precheck.
+5. Run the same local build and precheck as the workflow. Check relative asset paths and the entry page. For session setup, use the matching checkout's `scripts/set_secret.py --repo owner/name` after official `toy login` and `gh auth login`; it writes `TOY_SESSION_TOKEN` without displaying the value. Explain how to update it after expiry. Never ask the user to paste it into chat.
+6. If the user authorizes pushing and the repository is connected, run a preview and inspect the result. The first preview may not create a Toy ID. Do not treat the absence of an ID as proof that a Toy does not exist. The Action resolves and stores the Toy association on submission.
+7. Report the files changed, build/precheck evidence, whether a Toy preview was actually opened, and the remaining step to publish a Release. Do not claim review acceptance or live publication without a verified response.
+
+If the published repository is unavailable, prepare only changes supported by local verified files, and clearly mark the missing Action ref as an installation blocker. Do not substitute an unpinned source revision.

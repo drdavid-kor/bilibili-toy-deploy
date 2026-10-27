@@ -1,0 +1,38 @@
+{
+  "whoami": {
+    "uid": 123,
+    "name": "Example Creator"
+  },
+  "mylist": {
+    "total": 1,
+    "pn": 1,
+    "ps": 20,
+    "list": [
+      {
+        "id": 42,
+        "title": "Example Toy",
+        "url": "https://www.bilibili.com/toy/example-toy/index.html",
+        "status": "published",
+        "visibility": "PUBLIC",
+        "category": "TOOL",
+        "ctime": 1790000000,
+        "mtime": 1790000000,
+        "poster_url": "https://example.invalid/poster.png",
+        "icon_url": "https://example.invalid/icon.png",
+        "user_info": {
+          "mid": 123,
+          "name": "Example Creator",
+          "face": "https://example.invalid/avatar.png"
+        }
+      }
+    ]
+  },
+  "preview": {
+    "preview_url": "https://www.bilibili.com/toy/preview/example-toy/index.html"
+  },
+  "submitted": {
+    "id": 42,
+    "status": "reviewing",
+    "preview_url": "https://www.bilibili.com/toy/preview/example-toy/index.html"
+  }
+}

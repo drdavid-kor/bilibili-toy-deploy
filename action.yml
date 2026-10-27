@@ -1,0 +1,119 @@
+name: Bilibili Toy deploy
+description: Check static packages, create Toy previews, and submit exact previewed artifacts for review.
+author: drdavid-kor
+branding:
+  icon: upload-cloud
+  color: blue
+inputs:
+  mode:
+    description: plan, check, preview, submit, sync-metadata, or resolve-unknown
+    default: check
+  config:
+    description: Path to toy.config.json for check mode
+    default: toy.config.json
+  bundle:
+    description: Sealed bundle directory; output for check, input for publishing
+    default: .toy-state/bundle
+  source-sha:
+    description: Full source commit SHA
+    default: ''
+  release-id:
+    description: GitHub Release ID from plan
+    default: ''
+  toy-version:
+    description: Pinned official CLI version
+    default: v0.6.4
+  github-token:
+    description: Temporary GitHub token; deployments write and actions read for publishing
+    default: ${{ github.token }}
+  session-token:
+    description: Experimental Toy session from the TOY_SESSION_TOKEN secret
+    default: ''
+  override:
+    description: Manually rebuild and submit without a previous preview (workflow_dispatch only)
+    default: 'false'
+  metadata-only:
+    description: Prepare configuration and assets without packaging site files
+    default: 'false'
+  expose-preview:
+    description: Explicitly publish the preview link in the job summary; preview content may be accessible to others
+    default: 'false'
+  workflow-path:
+    description: Trusted consumer workflow path for locating previews
+    default: .github/workflows/toy.yml
+  expected-package-sha:
+    description: Expected package digest from trusted preview record
+    default: ''
+  preview-run:
+    description: Expected preview run from trusted record
+    default: ''
+  deployment-id:
+    description: Unknown-result Deployment ID to reconcile manually
+    default: ''
+  resolution:
+    description: accepted or not-accepted, after checking the exact request on Bilibili
+    default: ''
+outputs:
+  status:
+    description: checked, previewed, submitted, already-submitted, unknown or failed
+    value: ${{ steps.run.outputs.status }}
+  source-sha:
+    description: Resolved source SHA
+    value: ${{ steps.run.outputs.source-sha }}
+  operation:
+    description: Resolved operation
+    value: ${{ steps.run.outputs.operation }}
+  build:
+    description: Whether the source must be built
+    value: ${{ steps.run.outputs.build }}
+  override:
+    description: Whether manual override is selected
+    value: ${{ steps.run.outputs.override }}
+  release-id:
+    description: Resolved Release ID
+    value: ${{ steps.run.outputs.release-id }}
+  artifact-id:
+    description: Preview artifact selected by trusted record
+    value: ${{ steps.run.outputs.artifact-id }}
+  artifact-name:
+    description: Name for uploading preview bundle
+    value: ${{ steps.run.outputs.artifact-name }}
+  preview-run:
+    description: Selected preview workflow run
+    value: ${{ steps.run.outputs.preview-run }}
+  expected-package-sha:
+    description: Expected digest from preview record
+    value: ${{ steps.run.outputs.expected-package-sha }}
+  bundle:
+    description: Prepared bundle path
+    value: ${{ steps.run.outputs.bundle }}
+  package-sha:
+    description: SHA-256 of submitted or previewed package
+    value: ${{ steps.run.outputs.package-sha }}
+  toy-id:
+    description: Toy ID returned after accepted submission
+    value: ${{ steps.run.outputs.toy-id }}
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_BUNDLE: ${{ inputs.bundle }}
+        INPUT_SOURCE_SHA: ${{ inputs.source-sha }}
+        INPUT_RELEASE_ID: ${{ inputs.release-id }}
+        INPUT_TOY_VERSION: ${{ inputs.toy-version }}
+        INPUT_OVERRIDE: ${{ inputs.override }}
+        INPUT_METADATA_ONLY: ${{ inputs.metadata-only }}
+        INPUT_EXPOSE_PREVIEW: ${{ inputs.expose-preview }}
+        INPUT_WORKFLOW_PATH: ${{ inputs.workflow-path }}
+        INPUT_EXPECTED_PACKAGE_SHA: ${{ inputs.expected-package-sha }}
+        INPUT_PREVIEW_RUN: ${{ inputs.preview-run }}
+        INPUT_DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        INPUT_RESOLUTION: ${{ inputs.resolution }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        TOY_CLI_SESSION_TOKEN: ${{ inputs.session-token }}
+        ACTION_ROOT: ${{ github.action_path }}
+      run: python3 "$ACTION_ROOT/scripts/action_entry.py"

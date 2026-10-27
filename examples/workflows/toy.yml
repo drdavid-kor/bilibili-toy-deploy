@@ -1,0 +1,138 @@
+name: Toy
+on:
+  pull_request:
+  push:
+    branches: [main] # Change if your default branch is named differently.
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [preview, submit, override, sync-metadata, resolve-unknown]
+        default: preview
+        description: Override rebuilds and submits the selected Release without requiring an earlier preview.
+      release-tag:
+        type: string
+        description: Existing published Release tag; required for submit or override.
+      source-ref:
+        type: string
+        description: Optional commit for preview; must be in default-branch history.
+      deployment-id:
+        type: string
+        description: Only for resolve-unknown; ID printed by the failed submission.
+      resolution:
+        type: choice
+        options: ['', accepted, not-accepted]
+        description: Only after checking whether the exact request was accepted on Bilibili.
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+    outputs:
+      source-sha: ${{ steps.plan.outputs.source-sha }}
+      operation: ${{ steps.plan.outputs.operation }}
+      build: ${{ steps.plan.outputs.build }}
+      override: ${{ steps.plan.outputs.override }}
+      release-id: ${{ steps.plan.outputs.release-id }}
+      artifact-id: ${{ steps.plan.outputs.artifact-id }}
+      preview-run: ${{ steps.plan.outputs.preview-run }}
+      expected-package-sha: ${{ steps.plan.outputs.expected-package-sha }}
+    steps:
+      - id: plan
+        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+        with:
+          mode: plan
+  build:
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.source-sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        if: hashFiles('package-lock.json') != ''
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Build project (customize for your project)
+        if: needs.plan.outputs.operation != 'sync-metadata'
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+            npm run build
+          fi
+          # Plain HTML starter already has its files under site/.
+      - uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+        with:
+          mode: check
+          config: toy.config.json
+          bundle: ${{ runner.temp }}/toy-build
+          source-sha: ${{ needs.plan.outputs.source-sha }}
+          metadata-only: ${{ needs.plan.outputs.operation == 'sync-metadata' }}
+      - uses: actions/upload-artifact@v4
+        if: needs.plan.outputs.operation != 'check'
+        with:
+          name: toy-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/toy-build
+          retention-days: 30
+          if-no-files-found: error
+  publish:
+    needs: [plan, build]
+    if: >-
+      always() && needs.plan.result == 'success' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      needs.plan.outputs.operation != 'check'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      deployments: write
+    concurrency:
+      group: toy-write-${{ github.repository_id }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        if: needs.plan.outputs.build == 'true'
+        with:
+          name: toy-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/toy-bundle
+      - uses: actions/download-artifact@v4
+        if: needs.plan.outputs.operation == 'submit' && needs.plan.outputs.build != 'true'
+        with:
+          artifact-ids: ${{ needs.plan.outputs.artifact-id }}
+          run-id: ${{ needs.plan.outputs.preview-run }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/toy-bundle
+          merge-multiple: true
+      - id: publish
+        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+        with:
+          mode: ${{ needs.plan.outputs.operation }}
+          bundle: ${{ runner.temp }}/toy-bundle
+          source-sha: ${{ needs.plan.outputs.source-sha }}
+          release-id: ${{ needs.plan.outputs.release-id }}
+          override: ${{ needs.plan.outputs.override }}
+          expected-package-sha: ${{ needs.plan.outputs.expected-package-sha }}
+          preview-run: ${{ needs.plan.outputs.preview-run }}
+          session-token: ${{ secrets.TOY_SESSION_TOKEN }}
+          # Preview link and content become visible to readers of this workflow.
+          # Use only for content you intend to share; never put secrets in the site.
+          expose-preview: 'true'
+          deployment-id: ${{ inputs.deployment-id }}
+          resolution: ${{ inputs.resolution }}
+      - uses: actions/upload-artifact@v4
+        if: steps.publish.outputs.status == 'previewed'
+        with:
+          name: ${{ steps.publish.outputs.artifact-name }}
+          path: ${{ runner.temp }}/toy-bundle
+          retention-days: 30
+          if-no-files-found: error

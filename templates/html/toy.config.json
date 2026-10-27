@@ -1,0 +1,10 @@
+{
+  "slug": "my-toy",
+  "directory": "site",
+  "create": {
+    "title": "My Toy",
+    "category": "TOOL",
+    "visibility": "link-only"
+  },
+  "metadata": {}
+}
