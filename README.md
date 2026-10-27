@@ -2,7 +2,7 @@
 
 把 GitHub 上的静态网页项目接入哔哩哔哩 Toy。这个仓库提供 GitHub Action、纯 HTML 与 Vite 起点、已有项目接入示例，以及帮助编程助手完成适配的 `toy-github` Skill。它调用 B 站官方 `toy` CLI；B 站接受提审后仍需等待平台审核。
 
-**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。[`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2) 已公开发布，示例工作流固定引用该标签。外部仓库已验证新建 Vite 与已有 React 项目的预览、首次提审和下一版本更新；本人试用仍待反馈，见[验收记录](docs/verification/acceptance.md)。
+**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)。此前公开版本已在外部仓库验证新建 Vite 与已有 React 项目的预览、首次提审和下一版本更新；本人试用仍待反馈，见[验收记录](docs/verification/acceptance.md)。
 
 ## 复制给编程助手
 
@@ -37,7 +37,7 @@
 
 ## 从零创建：最短路径
 
-先从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载源码并解压。在解压目录运行下面的命令，把目录、slug 和标题换成自己的；脚手架会复制与该版本匹配的工作流：
+从 [v0.1.0-beta.3 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)下载源码并解压。在解压目录运行下面的命令，把目录、slug 和标题换成自己的；脚手架会复制与该版本匹配的工作流：
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
@@ -49,14 +49,14 @@ Vite 项目把 `html` 改为 `vite`。两个起点都自带 `toy-assets/poster.p
 
 ## 已有项目：接入方式
 
-从同一已发布版本复制 `examples/workflows/toy.yml` 到项目的 `.github/workflows/`，按项目现有命令修改构建步骤，并填写仓库根目录的 `toy.config.json`。若这个仓库将**首次创建** Toy，也要提供 `create.poster` 与 `create.icon` 指向的图片：可以先复制 `templates/html/toy-assets/` 中的占位图，再替换为自己的封面与图标。已有 Toy 接管后，普通内容更新会保留平台现有图片。纯 HTML 产物必须有根目录 `index.html`；Vite 项目可参考 [`examples/react`](examples/react/README.md) 和 [`examples/vue`](examples/vue/README.md)。Toy 页面位于 `/toy/<slug>/`，请检查资源路径和路由。Action 接收已构建目录，不替项目猜构建命令。[已有项目接入指南](docs/quickstart-existing.md)
+从同一已发布版本复制 `examples/workflows/toy.yml` 到项目的 `.github/workflows/`，按项目现有命令修改构建步骤，并填写仓库根目录的 `toy.config.json`。示例只监听 `main`；已有仓库的默认分支不是 `main` 时，须改工作流的 `push.branches`。若这个仓库将**首次创建** Toy，也要提供 `create.poster` 与 `create.icon` 指向的图片：可以先复制 `templates/html/toy-assets/` 中的占位图，再替换为自己的封面与图标。已有 Toy 接管后，普通内容更新会保留平台现有图片。纯 HTML 产物必须有根目录 `index.html`；Vite 项目可参考 [`examples/react`](examples/react/README.md) 和 [`examples/vue`](examples/vue/README.md)。Toy 页面位于 `/toy/<slug>/`，请检查资源路径和路由。Action 接收已构建目录，不替项目猜构建命令。[已有项目接入指南](docs/quickstart-existing.md)
 
 ## 发布行为
 
 | 事件 | 行为 |
 | --- | --- |
 | PR | 构建与静态预检，不读取 Toy Secret，不上传 Toy |
-| 默认分支 push | 构建、预检、生成 Toy 预览，保存对应构建包 |
+| 工作流配置的默认分支 push（示例为 `main`） | 构建、预检、生成 Toy 预览，保存对应构建包 |
 | 发布 GitHub Release | 取该提交已预览的同一构建包，创建或更新 Toy 并提审 |
 | 手动 `preview` | 对默认分支历史中的指定提交生成预览 |
 | 手动 `submit` | 对指定的已发布 Release 复用预览包提审 |
@@ -65,6 +65,8 @@ Vite 项目把 `html` 改为 `vite`。两个起点都自带 `toy-assets/poster.p
 | 手动 `resolve-unknown` | 在 B 站核实后记录不确定写入的结果，不再次发送请求 |
 
 工作流以“已提交审核”为成功边界；它不声明该版本已经上线。若缺少对应预览包，常规 Release 提审会停止。网络中断后结果不明时不会自动重提。查看[配置规则](docs/configuration.md)和[故障排查](docs/troubleshooting.md)了解恢复入口。
+
+运行 Summary 记录本次操作的提交、所选预览包及摘要、Release 与手动覆盖状态；元信息同步只记录字段名与内容摘要。预览在上传前先确认 GitHub 记录可写。只有 CLI 安装下载和 `whoami`、`mylist` 的暂时错误会有限重试；Toy 预览、创建、更新等写请求不会自动重试。
 
 **预览可见性：**Action 的 `expose-preview` 默认是 `false`，不会输出预览 URL。示例工作流明确设置为 `true`，以便从运行 Summary 打开页面。公开仓库的读者可能看到该链接及工作流 Artifact 中的网页包；预览链接可让持有者访问未提审内容。只将愿意分享的内容放进此示例流程，不要把凭据或敏感文件打进网页包。
 
@@ -77,6 +79,12 @@ npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github -
 ```
 
 可对编程助手说：“用 `toy-github` 在空目录创建一个 Vite Toy 项目并接入 GitHub 发布”，或“用 `toy-github` 检查并适配当前项目，保留原有部署流程”。安装版 Skill 已由独立实现代理完成一次新 Vite 项目的本地构建、预检及子路径访问测试；这不等于真人试用或平台提审。Skill 会处理常规代码与工作流修改；涉及后端迁移、登录替换或存储重做时会先说明影响，待你决定。它不能代替你的 Toy 发布资格和真实页面验收。[Skill 入口](skills/toy-github/SKILL.md) · [本人试用指南](docs/verification/user-trial.md)
+
+## 更新版本
+
+升级 Action 时，从准备采用的**已发布标签**下载同版本源码，将其中示例工作流与现有工作流对照，更新所有 `drdavid-kor/bilibili-toy-deploy@...` 引用和相应配置；保留自己改过的构建命令、默认分支和其他部署流程。提交并推送这次修改，先检查新提交的 Toy 预览，再为**同一提交**发布 Release。不要让新标签直接复用旧提交的预览包。
+
+更新 Skill 时重复上面的已验证安装命令取得当前 Skill，并让它选用准备采用的已发布 Action 标签，按该标签读取模板、工作流和文档；不要混用本地 Skill 副本旁的旧文件。
 
 ## 开发与来源
 
@@ -92,7 +100,7 @@ python3 -m unittest discover -s tests -v
 
 Connect a static GitHub web project to Bilibili Toy with an Action, HTML and Vite starters, React/Vue examples, and a `toy-github` onboarding skill. The Action wraps the official `toy` CLI. “Submitted for review” means Bilibili accepted the request; it does not mean the version is live.
 
-The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The current example workflow pins the public [`v0.1.0-beta.2` release](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2). Separate test repositories completed preview, first submission, and an update for a new Vite site and an adapted React site. The human trial is pending; see the [acceptance record](docs/verification/acceptance.md).
+The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3). Earlier public versions completed preview, first submission, and an update in separate new Vite and adapted React repositories. The human trial is pending; see the [acceptance record](docs/verification/acceptance.md).
 
 ### Copy into your coding agent
 
@@ -127,7 +135,7 @@ Never describe “submitted for review” as “live.”
 | New Toy site | [Start a new project](docs/quickstart-new.md) | Minimal HTML or Vite site, config, and workflow |
 | Existing frontend | [Adapt an existing project](docs/quickstart-existing.md) | Toy-compatible paths and a publishing workflow without replacing the application |
 
-For a new site, download the `v0.1.0-beta.2` source archive and run this from its extracted directory:
+Download the `v0.1.0-beta.3` source archive and run this from its extracted directory:
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
@@ -135,18 +143,20 @@ python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy
 
 Choose `--template vite` for a Vite starter. Both starters include placeholder `toy-assets/poster.png` and `toy-assets/icon.png`, so you can complete first-time setup without making images first; replace them with artwork for your Toy before review submission. Create an empty GitHub repository, run the official `toy login` and `gh auth login` locally, then run `python3 scripts/set_secret.py --repo OWNER/REPOSITORY` from this release checkout. It stores the Toy session in the repository's `TOY_SESSION_TOKEN` Actions Secret without printing the value. See [authentication](docs/authentication.md) for expiry and replacement.
 
-Push the new project's default branch and inspect the Actions preview. Publish a GitHub Release pointing to **that same commit** to submit the previewed package for review. A tag push alone does not submit. For an existing site, copy the matching `examples/workflows/toy.yml`, set an explicit build command and output directory in `toy.config.json`, and follow the [adaptation guide](docs/quickstart-existing.md). If that site will create a new Toy, also provide `create.poster` and `create.icon`, for example by copying the starter artwork and then replacing it. The Action does not auto-detect a build system.
+Push the new project's default branch and inspect the Actions preview. Publish a GitHub Release pointing to **that same commit** to submit the previewed package for review. A tag push alone does not submit. For an existing site, copy the matching `examples/workflows/toy.yml`, set an explicit build command and output directory in `toy.config.json`, and follow the [adaptation guide](docs/quickstart-existing.md). The example listens to `main`; change `push.branches` when the existing repository uses another default branch. If that site will create a new Toy, also provide `create.poster` and `create.icon`, for example by copying the starter artwork and then replacing it. The Action does not auto-detect a build system.
 
 | Event | Action |
 | --- | --- |
 | Pull request | Build and static checks; no Toy upload or session secret |
-| Default-branch push | Build, precheck, and Toy preview |
+| Configured default-branch push (`main` in the example) | Build, precheck, and Toy preview |
 | Published, non-prerelease GitHub Release | Reuse that commit's preview package and submit it for review |
 | Manual `preview` / `submit` | Preview a selected commit / submit a selected published Release |
 | Manual `override` | Rebuild and precheck the selected Release commit, then submit directly |
 | Manual `sync-metadata` / `resolve-unknown` | Submit explicit metadata fields / record a verified uncertain result without another Toy write |
 
 Unknown write outcomes require inspection on Bilibili before manual reconciliation; they are never retried automatically. See [configuration](docs/configuration.md) and [troubleshooting](docs/troubleshooting.md).
+
+The run summary records the source commit, selected preview artifact and digest, Release and override state, and metadata field names and digests. Preview confirms that its GitHub record can be written before uploading. Only temporary CLI download or `whoami`/`mylist` read errors receive bounded retries; Toy preview, create, and update writes do not.
 
 The Action's `expose-preview` input defaults to `false` and withholds the preview URL. The example workflow explicitly sets it to `true` for a clickable job-summary link. In a public repository, readers may obtain that link and the site package from workflow artifacts. Do not include secrets or unshared material in the package.
 
@@ -157,5 +167,9 @@ npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github -
 ```
 
 Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” An independent implementation agent built and checked a new Vite starter using the installed skill; the separate human trial is pending. The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md) · [Human trial guide](docs/verification/user-trial.md)
+
+### Updating
+
+For a newer Action release, download that published tag and compare its example workflow with yours. Update every Action ref and the matching config while preserving your custom build command, default branch, and other deployments. Push a new commit, inspect its Toy preview, then publish a Release for **that same commit**; do not reuse an old commit's preview package. To update the skill, repeat the verified installation command above and have it use templates, workflow, and docs from the published Action tag you choose.
 
 Run local tests with `python3 -m unittest discover -s tests -v`. The [plan](docs/development-plan.md), [acceptance record](docs/verification/acceptance.md), [CLI contract record](docs/verification/upstream-contract.md), and [MIT license](LICENSE) provide implementation context.

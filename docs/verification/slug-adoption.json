@@ -1,0 +1,50 @@
+{
+  "test": "Unique slug adoption into a new isolated repository without configured Toy ID or prior Deployment",
+  "repository": "drdavid-kor/bilibili-toy-adoption-check (private)",
+  "action": "drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2",
+  "run_id": 40547187265,
+  "records": [
+    {
+      "id": 7365082809,
+      "state": "success",
+      "kind": "preview",
+      "toy_id": 48653775407104,
+      "run_id": "40547187265",
+      "sha": "45adcb0db0e0c62e7bbae176254bdf4940f78f64",
+      "package_sha": "157d370c2d5fb70071a998f673ad375c45bbc73b59f3239f79b0914938091799"
+    },
+    {
+      "id": 7365081757,
+      "state": "success",
+      "kind": "binding",
+      "toy_id": 48653775407104,
+      "run_id": "40547187265",
+      "sha": "45adcb0db0e0c62e7bbae176254bdf4940f78f64",
+      "package_sha": null
+    }
+  ],
+  "before": {
+    "observed_at_utc": "2026-10-27T17:05:28.292461+00:00",
+    "matching_slug_count": 1,
+    "id": 48653775407104,
+    "title": "GitHub 到 Toy 自动发布演示",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "status": "published",
+    "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
+    "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+  },
+  "after": {
+    "observed_at_utc": "2026-10-27T17:06:17.607945+00:00",
+    "matching_slug_count": 1,
+    "id": 48653775407104,
+    "title": "GitHub 到 Toy 自动发布演示",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "status": "published",
+    "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
+    "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+  },
+  "result": "Existing Toy ID adopted; only binding and preview records written; no review submission or duplicate Toy; create-only title did not overwrite existing title",
+  "limitation": "Maintainer integration fixture, not independent human testing"
+}

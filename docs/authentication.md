@@ -37,10 +37,12 @@ python3 scripts/install_cli.py --destination "$HOME/.local/bin/toy"
 
 工作流报告会话失效时，在本机重新执行 `toy login`，确认账号仍是目标 Toy 的所有者，再运行同一条 `set_secret.py` 命令覆盖旧 Secret。然后手动重试原操作。会话寿命和本地重新登录对旧会话的影响目前尚未获得官方保证，需要按实际验证记录维护。
 
+Action 只会对 `whoami`、`mylist` 的暂时查询错误有限重试；会话失效、身份不符或业务错误不会靠自动重试恢复。Toy 预览、创建和更新请求也不自动重试。
+
 提交结果为“待核实”时，先到 B 站检查 Toy 是否已接受请求，不要只因为工作流失败就再次提审。若身份已切换，应先核对目标 Toy 的归属和仓库保存的关联记录，不能用新账号继续更新旧账号的 Toy。
 
 ## 安全边界
 
-Secret 只提供给 Toy 查询、预览和提交步骤。构建依赖与项目代码运行时不注入它；来自 fork 的 PR 只做构建与预检。不要在工作流中打印环境变量、调用 `set -x` 或把整个 CLI 响应无筛选地写到日志、Summary、Artifact、Deployment。GitHub 自动遮罩并不能保证所有变形后的令牌都被隐藏。[GitHub Actions 安全参考](https://docs.github.com/en/actions/reference/security/secure-use)
+Secret 只提供给 Toy 查询、预览和提交步骤。构建依赖与项目代码运行时不注入它；来自 fork 的 PR 只做构建与预检。[GitHub 默认规则](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflows-in-forked-repositories)还限制 fork PR：不传普通 Secret，`GITHUB_TOKEN` 只读。私有仓库管理员可以[另行放宽 fork PR 的 Secret 或写权限](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#enabling-workflows-for-forks-of-private-repositories)；此配置不在本项目默认权限验证范围内。不要在工作流中打印环境变量、调用 `set -x` 或把整个 CLI 响应无筛选地写到日志、Summary、Artifact、Deployment。GitHub 自动遮罩并不能保证所有变形后的令牌都被隐藏。[GitHub Actions 安全参考](https://docs.github.com/en/actions/reference/security/secure-use)
 
 本机不要把 `~/.toy/session.json`、`TOY_SESSION_TOKEN` 或复制的 `.env` 文件加入项目版本控制。若令牌疑似泄露，在 B 站重新登录或登出以更换会话，并立即更新或删除 GitHub Secret；旧令牌的失效行为应以平台实际结果为准。

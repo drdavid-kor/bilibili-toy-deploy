@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-28 Asia/Shanghai",
+  "test": "G4 metadata-only sync on synthetic existing React fixture; private GitHub repository",
+  "repository": "drdavid-kor/bilibili-toy-existing-example (private)",
+  "action": "drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2",
+  "source_sha": "b97b0b417ad3f8e2ab659cbb38595f71fb861678",
+  "toy_id": 48661048331264,
+  "official_cli_version": "v0.6.4",
+  "owner_verified_before_after": true,
+  "config_change": "Only metadata.title set; create and site files unchanged",
+  "push_preview_run": 40546454536,
+  "push_preview_deployment": 7364977329,
+  "unchanged_site_package_sha256": "b9104cf18fb7cfecf89ae7688a2d525c2875c377ab27eeaf83efd9988cf8b227",
+  "manual_sync_run": 40546627089,
+  "manual_sync_deployment": 7365000574,
+  "manual_sync_deployment_state": "success",
+  "metadata_fingerprint_sha256": "798e2676dee1c615a1b5c2c346709a32320b4922b61372a46c10b47f0d68976f",
+  "metadata_fingerprint_is_not_package_digest": true,
+  "before": {
+    "id": 48661048331264,
+    "title": "Existing React Toy Integration Test",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "theme": "dark",
+    "watermark_enabled": false,
+    "status": "published",
+    "owner_verified": true,
+    "poster_url_sha256": "6d20718265ed150ef778a93a8750a119322b0fed13e0d668c1713fe1d0fe42df",
+    "icon_url_sha256": "4e0d2e633181e8a54bbf853d998c54cb66adb2689e82e64353265b910a2073f3",
+    "url_present": true
+  },
+  "after": {
+    "id": 48661048331264,
+    "title": "React Toy · 元信息同步验证",
+    "category": "TOOL",
+    "visibility": "LINK_ONLY",
+    "theme": "dark",
+    "watermark_enabled": false,
+    "status": "published",
+    "owner_verified": true,
+    "poster_url_sha256": "6d20718265ed150ef778a93a8750a119322b0fed13e0d668c1713fe1d0fe42df",
+    "icon_url_sha256": "4e0d2e633181e8a54bbf853d998c54cb66adb2689e82e64353265b910a2073f3",
+    "url_present": true
+  },
+  "changed_fields": {
+    "title": {
+      "before": "Existing React Toy Integration Test",
+      "after": "React Toy · 元信息同步验证"
+    }
+  },
+  "interpretation": "Only the selected title changed in official CLI mylist immediately after the accepted metadata-only operation; category, visibility, theme, watermark and poster/icon URL hashes remained identical. Platform review outcome is not inferred from GitHub success alone.",
+  "d9_note": "Target status before sync was published, so this run does not exercise metadata sync while auditing."
+}

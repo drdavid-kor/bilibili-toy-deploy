@@ -10,13 +10,13 @@
 
 ## 1 建立最小项目
 
-从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载并解压源码。进入解压后的目录，运行脚手架。下面的路径是示例，请把 `./my-toy`、slug 和标题改成自己的值：
+从 [v0.1.0-beta.3 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)下载并解压源码。进入解压后的目录，运行脚手架。下面的路径是示例，请把 `./my-toy`、slug 和标题改成自己的值：
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
 ```
 
-脚手架会在**新目录**建立纯 HTML 项目，并复制同版本的 `examples/workflows/toy.yml`。若准备使用 Vite，把 `--template html` 改成 `--template vite`。React 和 Vue 项目的接入参考同版本 `examples/react/`、`examples/vue/`。这个新目录才是你的 Toy 仓库；不要把 Action 的整个开发仓库当作作品发布。示例工作流指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2`。
+脚手架会在**新目录**建立纯 HTML 项目，并复制同版本的 `examples/workflows/toy.yml`。若准备使用 Vite，把 `--template html` 改成 `--template vite`。React 和 Vue 项目的接入参考同版本 `examples/react/`、`examples/vue/`。这个新目录才是你的 Toy 仓库；不要把 Action 的整个开发仓库当作作品发布。示例工作流指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.3`。
 
 模板提供可访问的首页、相对资源路径、一个能运行的构建命令，以及 `toy.config.json`。它还自带 `toy-assets/poster.png`（1200×900）和 `toy-assets/icon.png`（256×256），配置已经引用这些图片，因此首次上手不用制作素材。正式提审前请换成与作品一致的封面和图标。填写自己的 slug 和标题。首次创建默认 `link-only`。slug 是作品地址的一部分，发布后不能靠普通更新修改；请在首次提审前检查拼写。[配置说明](configuration.md)解释各字段。
 
@@ -62,6 +62,8 @@ git push -u origin main
 修改页面后再次推送主分支，打开新预览，然后为该提交发布新的 Release。Action 应更新原 Toy，并保持原有标题、封面、分类和可见性。需要同步这些元信息时，使用独立的手动同步入口，不要把它们顺带写进日常内容更新。
 
 如果任务失败，先查看[故障排查](troubleshooting.md)。尤其注意会话过期、预览包缺失、结果待核实和 Toy 关联保存失败这几类情况，它们需要不同的恢复方法。若要重试一条已有 Release，在 Actions 页手动运行工作流，选择 `submit` 并填写其 `release-tag`；需要直接重建时选择 `override`。不要在未核实“结果待核实”前使用这两个入口。
+
+以后升级 Action，按 [README 的更新步骤](../README.md#更新版本)同步新发行版工作流与配置，并为新提交重新生成预览；已经发布的旧 Release 不需要修改。
 
 ## 用 Skill 加速
 

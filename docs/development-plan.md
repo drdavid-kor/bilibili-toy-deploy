@@ -4,7 +4,7 @@
 状态：访谈决策作为产品基线保留；实现与实际验收进度见 [验收记录](verification/acceptance.md)。  
 目标：交付他人仅凭文档即可独立使用的公开测试版，同时提供 Skill 帮助完成项目初始化、适配与 Action 接入。
 
-这份方案将用户在访谈中确认的规则作为开发基线。技术路径、接口名称和排期为实施设计，必须通过下列验证；不能将它们描述为已有功能。原始调研的版本、认证变量和平台能力记录均需绑定实际验证版本。
+这份方案将用户在访谈中确认的规则作为开发基线。下列技术路径、接口名称和排期记录的是方案制定时的设计，不代表当前实现状态；已发布功能和证据以[验收记录](verification/acceptance.md)及发行版为准。原始调研的版本、认证变量和平台能力记录均需绑定实际验证版本。
 
 ## 1 产品定位与成功标准
 
@@ -21,7 +21,7 @@
 
 成功的边界是 B 站接受提审。工作流须写明“已提交审核”，不能表示“已上线”。正式公开测试前，两条路径分别完成文档与 Skill 验收，且至少有一名未参与实现的人按文档独立跑通。
 
-沿用原材料中的项目标识 `drdavid-kor/bilibili-toy-deploy`、MIT 许可和中英 README 作为交付设计；远程仓库与版本尚未创建。市场规模、付费意愿和官方合作均不作为已验证前提。
+方案制定时沿用原材料中的项目标识 `drdavid-kor/bilibili-toy-deploy`、MIT 许可和中英 README；当时远程仓库与版本尚未创建。现已有[公开仓库](https://github.com/drdavid-kor/bilibili-toy-deploy)；发行版本与实际验收见[验收记录](verification/acceptance.md)。市场规模、付费意愿和官方合作均不作为已验证前提。
 
 ## 2 已确认的产品决策
 
@@ -170,7 +170,7 @@ Deployment 仅保存可公开的非敏感记录；公开仓库的部署记录不
 
 ## 8 元信息与配置契约
 
-建议使用一个可校验的数据配置文件，名称暂定 `toy.config.json`，区分目标信息、首次创建参数与可手动同步字段。名称和具体 schema 在开发时冻结，不在本文给出看似可执行但尚未实现的配置样例。
+方案制定时建议使用可校验的数据配置文件；当前已确定为 `toy.config.json`，区分目标信息、首次创建参数与可手动同步字段。可执行字段和示例见[配置说明](configuration.md)及[JSON Schema](../schema/toy.config.schema.json)，本节保留设计语义。
 
 | 配置类别 | 语义 |
 | --- | --- |
@@ -189,7 +189,7 @@ Deployment 仅保存可公开的非敏感记录；公开仓库的部署记录不
 
 ### 9.1 认证
 
-实验性认证适配层负责：临时会话目录或环境注入、账号检查、过期分类、日志脱敏和运行结束后的清理。原材料提到的 `TOY_CLI_SESSION_TOKEN` 等变量只是待验证候选，不是本项目承诺的官方接口。[S2]
+实验性认证适配层负责：临时会话目录或环境注入、账号检查、过期分类、日志脱敏和运行结束后的清理。方案制定时，原材料提到的 `TOY_CLI_SESSION_TOKEN` 等变量只是待验证候选；当前用户仓库 Secret、CLI 注入方式与限制见[认证说明](authentication.md)，不把它们称作官方 CI 接口。[S2]
 
 README 必须给出普通用户可复现的“本地官方登录 → 安全导出或读取会话 → 设置 GitHub Secret → 测试 → 过期更换”流程。如果无法提供清晰、安全的凭据取得方式，即使维护者能让 CI 跑通，也未通过公开测试门槛。
 
@@ -213,6 +213,8 @@ README 必须给出普通用户可复现的“本地官方登录 → 安全导�
 | 提审成功但本地记录失败 | 恢复记录，不重提；保留平台成功与记录失败两种事实 |
 
 用户人工重试前需看到原请求的 SHA、包摘要、Toy ID/slug、时间及结果不明提示。缺少原记录时不能默认为从未提交过。
+
+当前实现仅对 CLI 安装下载、`whoami` 与 `mylist` 的暂时错误做最多三次尝试；身份、业务、用法和永久下载错误不重试。预览、创建、更新等 Toy 写请求均不自动重试。运行 Summary 输出经过筛选的操作上下文，帮助核对所选产物与恢复原请求；预览上传前先确认 GitHub 记录可写。beta.3 的发行验证状态见[验收记录](verification/acceptance.md)。
 
 ## 10 Skill 的第一版规格
 
@@ -244,7 +246,7 @@ Skill、README 与 Action 的字段、模板版本、默认事件和错误处理
 
 ## 11 开发前技术验证门槛
 
-P0 使用隔离的测试仓库与有权限的测试 Toy。下列是待执行的验证计划，不是已完成记录。
+P0 原计划使用隔离的测试仓库与有权限的测试 Toy。下列保留原验证标准；各项已执行的结果、未覆盖边界及证据见[验收记录](verification/acceptance.md)。
 
 | 编号 | 验证问题 | 通过标准 | 不通过时的处理 |
 | --- | --- | --- | --- |
@@ -271,7 +273,7 @@ P0 使用隔离的测试仓库与有权限的测试 Toy。下列是待执行的�
 
 估算：技术探索约 1–2 人日，另有跨时间观察；核心与工作流约 5–8 人日；文档、模板、Skill 与外部试用修正约 3–5 人日。合计约 9–15 人日有效工作量，P0 后重估。该估算包含新增上手与 Skill 范围，不沿用原材料 2–4 人日的薄封装估算。
 
-本节记录原开发顺序。公开测试版 `v0.1.0-beta.2` 已发布，后续验收与人工试用状态见 [验收记录](verification/acceptance.md)。
+本节记录原开发顺序。发行版本、后续验收与人工试用状态见[验收记录](verification/acceptance.md)。
 
 ## 13 验收清单
 
@@ -281,16 +283,16 @@ P0 使用隔离的测试仓库与有权限的测试 Toy。下列是待执行的�
 
 - [ ] 纯 HTML 新项目仅凭文档完成首次预览、Release 提审及下一版本更新。（HTML 模板已验证；独立人类路径待验。）
 - [x] 既有 Vite 项目完成适配；React 和 Vue 示例分别构建并验证关键路由、资源。（合成已有 React 项目已完成外部首次提审和第二次更新；Vue 隔离构建、Toy 子路径资源与中英路由/计数交互已验证。审核中缺 URL 的同场景修复仍待重测。）
-- [ ] 唯一账号/slug 匹配自动接管，不新建重复 Toy；查不到的完整查询才允许新建。
+- [x] 唯一账号/slug 匹配自动接管，不新建重复 Toy；查不到的完整查询才允许新建。（[无 ID、无关联的隔离仓库](verification/slug-adoption.json)真实接管原 Toy，只写关联与预览；新建路径已在外部仓库实测，查询不完整阻断另有本地回归。）
 - [x] 显式 ID、保存记录和当前账号不一致时停止，提供修复说明。（本地回归与故障排查。）
 - [x] 预览没有 ID 时不虚构关联；正式创建后跨运行可恢复 ID。（托管预览、创建与 Deployment 记录。）
 - [x] 关联保存失败可手动补填；恢复动作不再次提审。（本地故障注入与一次真实待核实结果恢复。）
-- [x] 普通 push 和所有 PR 不提审，tag push 不单独提审。（工作流事件、托管 push 与本地 fork PR 规划测试；真实 fork PR 待 G8 验证。）
+- [x] 普通 push 和所有 PR 不提审，tag push 不单独提审。（工作流事件、托管 push、本地 fork PR 规划测试与 GitHub 默认 fork 权限契约；未单独运行真实 fork PR，见 [G8](verification/acceptance.md#技术验证门槛)。）
 - [x] Release 使用对应提交的预览包；缺失、过期、摘要不符都停止。（托管同包摘要与本地阻断回归。）
 - [x] 手动覆盖构建指定 Release 提交，不构建误选的最新分支；仍执行预检。（托管覆盖运行与提交核对测试。）
 - [ ] 已有版本待审时允许新版本提交，写操作不会并发覆盖。（beta.2 审核中缺 URL 修复待外部仓库验证；并发排队已配置。）
 - [x] 重复 Release 事件不会重复提交已知成功的同一包；未知结果不会自动重试。（本地去重测试与真实待核实恢复。）
-- [ ] 日常更新保留平台元信息；手动同步只覆盖显式字段。（日常保留已实测；同步后观测不能唯一归因于单次写入。）
+- [x] 日常更新保留平台元信息；手动同步只覆盖显式字段。（[日常保留](verification/metadata-retention.json)与独立[单字段同步](verification/metadata-sync.json)均有平台前后快照；后者仅标题变化，未验证审核中同步。）
 - [x] 所有结果区分“已提交审核”“失败”和“待核实”，不误报上线。（托管接受、明确拒绝、待核实记录及恢复。）
 
 ### 13.2 文档与 Skill
@@ -347,7 +349,7 @@ bilibili-toy-deploy/
 - [S3 Toy 官方预检脚本](https://github.com/bilibili/toy/blob/main/skills/toy/scripts/toy_doctor.py)：静态包检查参考，不能替代浏览器验证。
 - [S4 GitHub Actions 安全使用说明](https://docs.github.com/en/actions/reference/security/secure-use)：凭据、权限和不受信任代码的处理。
 - [S5 GitHub 工作流权限](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions)：工作流临时令牌权限配置。
-- [S6 GitHub Deployment API](https://docs.github.com/en/rest/deployments/deployments)：部署记录读写、查询和状态机制；本项目关联方案仍需集成验证。
+- [S6 GitHub Deployment API](https://docs.github.com/en/rest/deployments/deployments)：部署记录读写、查询和状态机制；本项目关联方案的实际验证见[验收记录](verification/acceptance.md)。
 - [S7 GitHub Artifact 文档](https://docs.github.com/en/actions/tutorials/store-and-share-data)：产物保存、保留期和跨运行下载。
 - [S8 GitHub 工作流事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)：Release、PR 等触发机制。
 

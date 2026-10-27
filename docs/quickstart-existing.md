@@ -6,7 +6,7 @@
 
 先确认入口文件、包管理器、构建命令及输出目录，并运行一次现有构建和测试。不要假定所有项目的产物都在 `dist/`。后端或服务端渲染项目需要另行判断；第一版不承诺自动迁移这些功能。
 
-从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载并解压源码，将其中 `examples/workflows/toy.yml` 复制到现有项目的 `.github/workflows/`。示例指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2`。将构建步骤改为项目原有命令，并把 `toy.config.json` 的 `directory` 设置为实际输出目录。保留已经使用的其他部署工作流。Action 接收**构建好的目录**，不会自动识别或修理构建命令。Action 标签、示例工作流和配置 schema 应使用同一发布版本。
+从 [v0.1.0-beta.3 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)下载并解压源码，将其中 `examples/workflows/toy.yml` 复制到现有项目的 `.github/workflows/`。示例指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.3`。将构建步骤改为项目原有命令，并把 `toy.config.json` 的 `directory` 设置为实际输出目录。示例的 `push.branches` 只包含 `main`；若现有仓库的默认分支另有名称，请改成实际分支，否则推送后不会自动生成预览。保留已经使用的其他部署工作流。Action 接收**构建好的目录**，不会自动识别或修理构建命令。Action 标签、示例工作流和配置 schema 应使用同一发布版本。
 
 ## 2 让页面在 Toy 的子路径中运行
 
@@ -24,11 +24,19 @@ Toy 页面位于 `/toy/<slug>/`。检查首页 HTML 中的脚本、样式、图�
 
 ## 4 构建、预览、提审
 
-先在本地运行原测试、构建和 Toy 静态预检，修复 ERROR，逐条了解 WARN。检查桌面和移动端的入口、图片、字体、路由与核心交互。然后推送主分支，在 GitHub Actions 页找到本次运行：工作流生成 Toy 预览，但不会提交审核。打开预览进行实际页面检查。示例将 `expose-preview` 设为 `true`，会把可访问的预览链接写进 Summary；公开仓库的读者也可能看到链接和 Artifact 中的网页包。若内容不能公开，先改用私有仓库并确认访问权限，或改用自己的预览交付方式。把该选项改为 `false` 会隐藏链接，也无法从 Summary 打开预览。
+先在本地运行原测试与构建。然后进入**下载的本项目发行版目录**，使用随版预检脚本检查实际构建产物；把示例绝对路径、`dist` 和 slug 改为你的项目值，纯 HTML 项目使用自己的静态输出目录：
+
+```bash
+python3 vendor/toy_doctor.py /absolute/path/to/your-project/dist --slug my-toy --require-root-index
+```
+
+修复 ERROR，逐条了解 WARN，并检查桌面和移动端的入口、图片、字体、路由与核心交互。然后推送工作流配置的默认分支，在 GitHub Actions 页找到本次运行：工作流生成 Toy 预览，但不会提交审核。打开预览进行实际页面检查。示例将 `expose-preview` 设为 `true`，会把可访问的预览链接写进 Summary；公开仓库的读者也可能看到链接和 Artifact 中的网页包。若内容不能公开，先改用私有仓库并确认访问权限，或改用自己的预览交付方式。把该选项改为 `false` 会隐藏链接，也无法从 Summary 打开预览。
 
 在 GitHub Releases 页为**同一提交**发布 Release。默认提审复用预览包，显示“已提交审核”表示 B 站接受申请，不等于已经上线。如果预览包缺失或过期，先为该提交重新预览；确需跳过这一步时，在 Actions 页的手动入口明确指定 Release 并启用覆盖，工具会重新构建、预检并直接提审。
 
 以后发布继续走主分支预览 → Release 提审。日常内容更新保留 B 站现有标题、封面、分类与可见性；单独的手动同步操作才更新仓库配置中显式填写的元信息。
+
+升级 Action 时按 [README 的更新步骤](../README.md#更新版本)同步新发行版的工作流引用与配置，保留本项目的构建命令和默认分支设置；推送后先生成新提交的预览，再发布该提交的 Release。
 
 ## 用 Skill 加速
 

@@ -5,11 +5,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import os
 import platform
 import re
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -20,6 +23,7 @@ PINNED_SHA256 = {
     ("v0.6.4", "darwin_arm64"): "f2e5fc6610d70528420475f89b210bb76579e40ffc2f2b80dee50b869661436b",
 }
 MAX_BINARY_BYTES = 100 * 1024 * 1024
+MAX_DOWNLOAD_ATTEMPTS = 3
 
 
 def release_platform(system: str | None = None, machine: str | None = None) -> str:
@@ -50,32 +54,51 @@ def _read_checksum(url: str) -> str:
     return digest
 
 
+def _retry_transient(operation):
+    for attempt in range(MAX_DOWNLOAD_ATTEMPTS):
+        try:
+            return operation()
+        except urllib.error.HTTPError as exc:
+            if exc.code != 429 and not 500 <= exc.code < 600:
+                raise
+            if attempt == MAX_DOWNLOAD_ATTEMPTS - 1:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead):
+            if attempt == MAX_DOWNLOAD_ATTEMPTS - 1:
+                raise
+        time.sleep(2**attempt)
+
+
 def download_verified(version: str, destination: Path, target: str | None = None) -> Path:
     """Download, verify, and atomically replace destination; leave old file on failure."""
     target = target or release_platform()
     url = archive_url(version, target)
-    expected = PINNED_SHA256.get((version, target)) or _read_checksum(url + ".sha256")
+    expected = PINNED_SHA256.get((version, target)) or _retry_transient(lambda: _read_checksum(url + ".sha256"))
     destination = Path(destination).expanduser().resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary_name = tempfile.mkstemp(prefix=".toy-download-", dir=destination.parent)
-    temporary = Path(temporary_name)
-    try:
-        digest = hashlib.sha256()
-        size = 0
-        with os.fdopen(fd, "wb") as output, urllib.request.urlopen(url, timeout=60) as response:
-            while chunk := response.read(1024 * 1024):
-                size += len(chunk)
-                if size > MAX_BINARY_BYTES:
-                    raise ValueError("Toy CLI archive exceeds the size limit")
-                digest.update(chunk)
-                output.write(chunk)
-        if size == 0 or digest.hexdigest() != expected:
-            raise ValueError("Toy CLI SHA-256 mismatch; existing binary was preserved")
-        temporary.chmod(0o755)
-        temporary.replace(destination)
-        return destination
-    finally:
-        temporary.unlink(missing_ok=True)
+
+    def download_once() -> Path:
+        fd, temporary_name = tempfile.mkstemp(prefix=".toy-download-", dir=destination.parent)
+        temporary = Path(temporary_name)
+        try:
+            digest = hashlib.sha256()
+            size = 0
+            with os.fdopen(fd, "wb") as output, urllib.request.urlopen(url, timeout=60) as response:
+                while chunk := response.read(1024 * 1024):
+                    size += len(chunk)
+                    if size > MAX_BINARY_BYTES:
+                        raise ValueError("Toy CLI archive exceeds the size limit")
+                    digest.update(chunk)
+                    output.write(chunk)
+            if size == 0 or digest.hexdigest() != expected:
+                raise ValueError("Toy CLI SHA-256 mismatch; existing binary was preserved")
+            temporary.chmod(0o755)
+            temporary.replace(destination)
+            return destination
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    return _retry_transient(download_once)
 
 
 def main() -> int:
@@ -85,7 +108,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         installed = download_verified(args.version, args.destination)
-    except (OSError, ValueError, urllib.error.URLError) as exc:
+    except (OSError, ValueError, urllib.error.URLError, http.client.IncompleteRead) as exc:
         print(f"Toy CLI installation failed: {exc}", file=sys.stderr)
         return 1
     print(installed)

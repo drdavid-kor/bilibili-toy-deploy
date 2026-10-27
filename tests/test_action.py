@@ -308,15 +308,77 @@ class ActionTests(unittest.TestCase):
         self.assertTrue(toy.closed)
         self.assertTrue(action.jsonfile(path / "manifest.json")["preview"])
 
+    def test_preview_requires_record_permission_before_toy_upload(self):
+        path = self.bundle()
+        for denied_step in ("record", "status"):
+            with self.subTest(denied_step=denied_step):
+                gh = FakeGitHub([self.binding()])
+                toy = FakeToy(response={"preview_url": "https://www.bilibili.com/toy/preview/demo"})
+                with patch.object(gh, denied_step, side_effect=action.Failure("Deployment permission denied")):
+                    with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+                        with self.assertRaisesRegex(action.Failure, "permission denied"):
+                            action.write_operation(self.operation_args(path, mode="preview"))
+                self.assertEqual(toy.calls, [])
+                self.assertFalse(action.jsonfile(path / "manifest.json")["preview"])
+
+    def test_failed_preview_records_uncertain_state_without_upload_retry(self):
+        path = self.bundle()
+        gh = FakeGitHub([self.binding()])
+        toy = FakeToy(error=action.Failure("preview response unavailable"))
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+            with self.assertRaisesRegex(action.Failure, "preview response unavailable"):
+                action.write_operation(self.operation_args(path, mode="preview"))
+        self.assertEqual(len(toy.calls), 1)
+        self.assertEqual([state for _, state, _ in gh.statuses], ["in_progress", "error"])
+        self.assertFalse(action.jsonfile(path / "manifest.json")["preview"])
+
     def test_live_update_status_only_receipt_uses_verified_existing_id(self):
         path = self.bundle()
         self.mark_preview(path)
         gh, toy = FakeGitHub([self.binding()]), FakeToy(response={"status": "auditing"})
-        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+        summaries = []
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy), \
+             patch.object(action, "summary", side_effect=summaries.append):
             action.write_operation(self.operation_args(path))
         self.assertEqual(len(toy.calls), 1)
         self.assertEqual(gh.statuses[-1][1], "success")
         self.assertFalse(any(x["payload"]["kind"] == "binding" for x in gh.saved))
+        context = next(text for text in summaries if text.startswith("Operation context"))
+        for value in (SHA, "demo", '"toy_id":42', '"release_id":"77"', action.jsonfile(path / "manifest.json")["package_sha"]):
+            self.assertIn(value, context)
+
+    def test_metadata_image_bytes_change_record_fingerprint_without_raw_values_in_summary(self):
+        image = self.base / "assets" / "icon.png"
+        image.write_bytes(b"first icon")
+        config = json.loads(self.config.read_text())
+        config["metadata"] = {"title": "private display title", "icon": "assets/icon.png"}
+        self.config.write_text(json.dumps(config))
+        fingerprints = []
+        image_digests = []
+        for name, content in (("one", b"first icon"), ("two", b"second icon")):
+            image.write_bytes(content)
+            bundle = self.base / name
+            action.package(SimpleNamespace(config=str(self.config), bundle=str(bundle), source_sha=SHA, metadata_only=True))
+            gh = FakeGitHub([self.binding()])
+            toy = FakeToy(response={"status": "auditing"})
+            summaries = []
+            args = self.operation_args(bundle, mode="sync-metadata")
+            args.release_id = ""
+            with patch.dict(os.environ, {"TOY_CLI_SESSION_TOKEN": "secret-canary-never-log"}), \
+                 patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy), \
+                 patch.object(action, "summary", side_effect=summaries.append):
+                action.write_operation(args)
+            record = gh.saved[0]["payload"]
+            fingerprints.append(record["metadata_sha"])
+            image_digests.append(record["metadata_images_sha256"]["icon"])
+            self.assertEqual(record["metadata_fields"], ["icon", "title"])
+            context = "\n".join(summaries)
+            self.assertIn(record["metadata_sha"], context)
+            self.assertIn(record["metadata_images_sha256"]["icon"], context)
+            self.assertNotIn("private display title", context)
+            self.assertNotIn("secret-canary-never-log", context)
+        self.assertNotEqual(fingerprints[0], fingerprints[1])
+        self.assertNotEqual(image_digests[0], image_digests[1])
 
     def test_live_update_rejects_a_different_returned_toy_id(self):
         path = self.bundle()
@@ -421,6 +483,36 @@ class ActionTests(unittest.TestCase):
         self.assertEqual(new_gh.statuses, [])
         self.assertEqual(new_toy.calls, [])
 
+    def test_recovery_shows_original_request_before_changing_status(self):
+        events = []
+
+        class RecoveryGitHub(FakeGitHub):
+            def __init__(self):
+                super().__init__(states={9: "error"})
+
+            def call(self, path):
+                if path == "deployments/9":
+                    return {"id": 9, "created_at": "2026-10-28T01:02:03Z", "payload": {
+                        "tool": action.TOOL, "kind": "submission", "sha": SHA,
+                        "slug": "demo", "account": "account-hash", "toy_id": 42,
+                        "package_sha": "b" * 64, "run_id": "17", "release_id": "77",
+                    }}
+                return super().call(path)
+
+            def status(self, record, state, description):
+                events.append(("status", state))
+                return super().status(record, state, description)
+
+        with patch.object(action, "GitHub", return_value=RecoveryGitHub()), \
+             patch.object(action, "Toy") as construct_toy, \
+             patch.object(action, "summary", side_effect=lambda value: events.append(("summary", value))):
+            action.resolve_unknown(SimpleNamespace(deployment_id=9, resolution="not-accepted"))
+            construct_toy.assert_not_called()
+        self.assertEqual(events[0][0], "summary")
+        for value in (SHA, "demo", "b" * 64, '"toy_id":42', '"release_id":"77"', "2026-10-28T01:02:03Z"):
+            self.assertIn(value, events[0][1])
+        self.assertEqual(events[1], ("status", "failure"))
+
     def test_accepted_create_with_record_failure_cannot_be_created_again(self):
         (self.base / "assets" / "icon.png").write_bytes(b"icon")
         config = json.loads(self.config.read_text())
@@ -485,6 +577,19 @@ class ActionTests(unittest.TestCase):
                     action.write_operation(self.operation_args(path, override=True))
                 construct_toy.assert_not_called()
 
+    def test_manual_override_summary_identifies_release_and_rebuilt_package(self):
+        path = self.bundle()
+        summaries = []
+        gh, toy = FakeGitHub([self.binding()]), FakeToy(response={"status": "auditing"})
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy), \
+             patch.object(action, "summary", side_effect=summaries.append):
+            action.write_operation(self.operation_args(path, override=True))
+        context = next(item for item in summaries if item.startswith("Operation context"))
+        self.assertIn('"override":true', context)
+        self.assertIn('"release_id":"77"', context)
+        self.assertIn('"release_tag":"v1"', context)
+        self.assertIn(action.jsonfile(path / "manifest.json")["package_sha"], context)
+
     def test_submit_revalidates_published_release_tag_and_source_before_toy_access(self):
         path = self.bundle()
         self.mark_preview(path)
@@ -527,14 +632,17 @@ class ActionTests(unittest.TestCase):
             "id": 77, "tag_name": "v1", "draft": False, "prerelease": False,
         }}))
         published = {}
+        summaries = []
         with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "release", "GITHUB_EVENT_PATH": str(event)}), \
              patch.object(action, "GitHub", return_value=FakePlanningGitHub(source_repository_id=2)), \
-             patch.object(action, "output", side_effect=lambda key, value: published.__setitem__(key, value)):
+             patch.object(action, "output", side_effect=lambda key, value: published.__setitem__(key, value)), \
+             patch.object(action, "summary", side_effect=summaries.append):
             action.plan(SimpleNamespace(workflow_path=".github/workflows/toy.yml"))
         self.assertEqual(published["source-sha"], SHA)
         self.assertEqual(published["artifact-id"], 23)
         self.assertEqual(published["expected-package-sha"], "a" * 64)
         self.assertEqual(published["build"], "false")
+        self.assertTrue(any('"artifact_id":23' in item and '"preview_run":"17"' in item and '"package_sha":"' + "a" * 64 + '"' in item for item in summaries))
 
         with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "release", "GITHUB_EVENT_PATH": str(event)}), \
              patch.object(action, "GitHub", return_value=FakePlanningGitHub(source_repository_id=999)), \
@@ -589,6 +697,17 @@ class ActionTests(unittest.TestCase):
         github.call = page
         self.assertEqual(github.records("demo", "binding"), [binding])
         self.assertEqual(len(paths), 2)
+
+    def test_deployment_record_keeps_request_time_for_later_reconciliation(self):
+        github = object.__new__(action.GitHub)
+        github.call = lambda path, data: {"id": 9, "payload": data["payload"]}
+        record = github.record(SHA, "demo", "submission", package_sha="b" * 64, toy_id=42)
+        requested_at = record["payload"]["requested_at"]
+        self.assertRegex(requested_at, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+        shown = []
+        with patch.object(action, "summary", side_effect=shown.append):
+            action.operation_summary("resolve-unknown", SHA, "demo", requested_at=requested_at, package_sha="b" * 64, toy_id=42)
+        self.assertIn(requested_at, shown[0])
 
     def test_fork_pull_request_plan_only_checks_package(self):
         event = self.base / "fork-pr.json"

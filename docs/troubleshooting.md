@@ -1,6 +1,6 @@
 # 故障排查
 
-先区分失败发生在构建、静态预检、Toy 预览、提审，还是 GitHub 记录保存。工作流 Summary 和 CLI 错误会指出阶段；同一个提示不能套用所有重试方法。
+先区分失败发生在构建、静态预检、Toy 预览、提审，还是 GitHub 记录保存。工作流 Summary 会列出已筛选的操作上下文：提交、所选预览运行和产物、包摘要、Release、覆盖状态，以及元信息字段名与摘要；恢复待核实结果时也列出原请求上下文和时间。CLI 原始响应与凭据不在此记录。只有 CLI 下载和 `whoami`、`mylist` 的暂时错误会有限重试；Toy 写请求不会自动重试。
 
 | 现象 | 应先检查什么 | 恢复方式 |
 | --- | --- | --- |
@@ -8,6 +8,7 @@
 | 静态预检 ERROR | 入口文件、资源路径、包体硬限制和配置 | 修复错误后重新构建；WARN 会显示但不阻断 |
 | 新 Toy 预览成功，但创建提审被拒 | `create.poster`、`create.icon` 是否填写且文件存在，图片规格与平台返回原因 | 先用模板提供的封面、图标补齐并重新预览；如果仍被拒，按平台实际错误继续排查，不假定缺图是唯一原因 |
 | Toy 页面白屏或 404 | 构建产物内的 `/` 根路径、Vite base、路由刷新和文件名大小写 | 修正项目并重新预览；不能只凭上传成功判定页面正常 |
+| 预览上传前因 GitHub 记录权限失败 | 工作流 `deployments: write` 权限及仓库 Actions 设置 | 修正权限后再预览；预览未上传，不能把这次运行当成有效预览 |
 | 未找到 Release 对应预览包 | tag 指向的 SHA、产物保留期和预览运行是否成功 | 为该提交重新预览；必要时使用明确标记的手动覆盖 |
 | 同名 slug 有多个匹配或查询失败 | 当前账号、slug 与 CLI 返回的完整列表 | 先核对目标，必要时显式填写 Toy ID；不要直接重试创建 |
 | `v0.1.0-beta.1` 在刚创建的 Toy 审核期间报 `Toy listing contains unverifiable ownership or slug` | 平台列表项可能已有正确归属，却暂时没有可核对 slug 的 URL；[首次失败运行](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/1)在预览前停止，没有发送 Toy 写请求 | 先到 B 站确认目标 Toy 与审核状态；待列表出现可核对的 URL 后，可重跑原预览（[同一运行第 2 次尝试已成功](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/2)）。也可升级到修复版 `v0.1.0-beta.2` 后重新预览。不要改 slug 或直接发布 Release 来绕过核对 |

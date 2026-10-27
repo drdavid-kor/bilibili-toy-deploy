@@ -32,6 +32,33 @@ def summary(message):
     if dest:
         with open(dest,'a') as f:f.write(message+'\n\n')
 def valid_int(x): return isinstance(x,int) and not isinstance(x,bool) and x>0
+def operation_summary(operation,sha,slug,**details):
+    """Show selected audit facts without raw CLI output or unvalidated record text."""
+    facts={'operation':operation}
+    if isinstance(sha,str) and SHA.fullmatch(sha):facts['source_sha']=sha
+    if isinstance(slug,str) and SLUG.fullmatch(slug):facts['slug']=slug
+    for key in ('toy_id','deployment_id','artifact_id'):
+        if valid_int(details.get(key)):facts[key]=details[key]
+    for key in ('run_id','run_attempt','preview_run','release_id'):
+        value=str(details.get(key) or '')
+        if re.fullmatch(r'[1-9][0-9]*',value):facts[key]=value
+    for key in ('package_sha','metadata_sha'):
+        value=details.get(key)
+        if isinstance(value,str) and re.fullmatch(r'[0-9a-f]{64}',value):facts[key]=value
+    for key in ('trigger','actor','requested_at'):
+        value=details.get(key)
+        if isinstance(value,str) and re.fullmatch(r'[A-Za-z0-9_:.+/-]{1,80}',value):facts[key]=value
+    tag=details.get('release_tag')
+    if isinstance(tag,str) and re.fullmatch(r'[A-Za-z0-9_.+/-]{1,128}',tag):facts['release_tag']=tag
+    if details.get('target') in {'create','update'}:facts['target']=details['target']
+    if details.get('resolution') in {'accepted','not-accepted'}:facts['resolution']=details['resolution']
+    if isinstance(details.get('override'),bool):facts['override']=details['override']
+    if isinstance(details.get('rebuild'),bool):facts['rebuild']=details['rebuild']
+    fields=details.get('metadata_fields')
+    if isinstance(fields,list) and all(isinstance(x,str) and x in META for x in fields):facts['metadata_fields']=sorted(fields)
+    images=details.get('metadata_images_sha256')
+    if isinstance(images,dict) and all(k in {'poster','icon'} and isinstance(v,str) and re.fullmatch(r'[0-9a-f]{64}',v) for k,v in images.items()):facts['metadata_images_sha256']=images
+    summary('Operation context / 操作上下文: '+json.dumps(facts,sort_keys=True,ensure_ascii=True,separators=(',',':')))
 
 def config_load(path):
     cfg=jsonfile(path)
@@ -128,7 +155,7 @@ class GitHub:
             try:
                 with urllib.request.urlopen(request,timeout=30) as r:return json.load(r)
             except urllib.error.HTTPError as e:
-                if e.code>=500 and data is None and attempt<2:time.sleep(attempt+1);continue
+                if (e.code==429 or e.code>=500) and data is None and attempt<2:time.sleep(attempt+1);continue
                 raise Failure(f'GitHub API request failed (HTTP {e.code}); inspect workflow permissions or retry read operations.') from None
             except (urllib.error.URLError,TimeoutError,ValueError):
                 if data is None and attempt<2:time.sleep(attempt+1);continue
@@ -146,7 +173,7 @@ class GitHub:
         records=self.pages('deployments?environment='+urllib.parse.quote('toy-'+slug,safe=''))
         return [r for r in records if isinstance(r.get('payload'),dict) and r['payload'].get('tool')==TOOL and r['payload'].get('schema')==SCHEMA and r['payload'].get('slug')==slug and (not kind or r['payload'].get('kind')==kind)]
     def record(self,sha,slug,kind,**payload):
-        data={'tool':TOOL,'schema':SCHEMA,'kind':kind,'slug':slug,'sha':sha,'run_id':os.environ.get('GITHUB_RUN_ID',''),'run_attempt':os.environ.get('GITHUB_RUN_ATTEMPT','1'),'actor':os.environ.get('GITHUB_ACTOR',''),**payload}
+        data={'tool':TOOL,'schema':SCHEMA,'kind':kind,'slug':slug,'sha':sha,'run_id':os.environ.get('GITHUB_RUN_ID',''),'run_attempt':os.environ.get('GITHUB_RUN_ATTEMPT','1'),'actor':os.environ.get('GITHUB_ACTOR',''),'requested_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),**payload}
         record=self.call('deployments',{'ref':sha,'task':'toy:'+kind,'auto_merge':False,'required_contexts':[],'environment':'toy-'+slug,'production_environment':False,'payload':data})
         if not valid_int(record.get('id')):raise Failure('Deployment write returned no ID')
         return record
@@ -174,32 +201,50 @@ class Toy:
             if (cmd,) not in self.help:raise Failure('Unsupported CLI command contract')
     def close(self):self.temp.cleanup()
     def call(self,args,write=False):
-        try:p=subprocess.run([self.binary,*args,'--json'],capture_output=True,text=True,env=self.env,timeout=100)
-        except (subprocess.TimeoutExpired,OSError):
-            if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.') from None
-            raise Failure('Toy CLI unavailable or query timed out') from None
-        try:data=json.loads(p.stdout)
-        except ValueError:data=None
-        if p.returncode:
-            # Official CLI business errors may be text. Never echo raw responses.
-            code=data.get('code') if isinstance(data,dict) else None
-            match=re.search(r'\bcode[=:]\s*(\d+)\b',p.stderr)
-            if code is None and match:code=int(match.group(1))
-            if code in (307001,307029):raise Failure('Toy session expired; log in locally and replace TOY_SESSION_TOKEN.')
-            if code is not None:
-                message=data.get('message','') if isinstance(data,dict) else ''
-                found=re.search(r'\bmessage=(.*)',p.stderr)
-                if not message and found:message=found.group(1)
-                message=str(message).replace(self.env.get('TOY_CLI_SESSION_TOKEN',''),'[redacted]') if self.env.get('TOY_CLI_SESSION_TOKEN') else str(message)
-                message=re.sub(r'https?://\S+','[URL]',message)
-                message=re.sub(r'[A-Za-z0-9_=-]{48,}','[redacted]',message)
-                raise Failure(f'Toy rejected the request (code {code}): '+json.dumps(message[:240],ensure_ascii=False))
-            if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.')
-            raise Failure('Toy query failed; check credentials, network and CLI compatibility')
-        if not isinstance(data,dict):
-            if write:raise Unknown('Invalid submission response; result is unknown.')
-            raise Failure('Invalid CLI JSON response')
-        return data
+        # Preview create/update uploads content even without --yes, so only
+        # actual identity/list reads may be repeated after a transient failure.
+        safe_read=not write and bool(args) and args[0] in {'whoami','mylist'}
+        attempts=3 if safe_read else 1
+        for attempt in range(attempts):
+            try:p=subprocess.run([self.binary,*args,'--json'],capture_output=True,text=True,env=self.env,timeout=100)
+            except subprocess.TimeoutExpired:
+                if safe_read and attempt+1<attempts:
+                    time.sleep(0.25*(2**attempt));continue
+                if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.') from None
+                raise Failure('Toy CLI unavailable or query timed out') from None
+            except OSError:
+                # Missing binaries and permission errors are not transient reads.
+                if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.') from None
+                raise Failure('Toy CLI unavailable or query timed out') from None
+            try:data=json.loads(p.stdout)
+            except ValueError:data=None
+            if p.returncode:
+                # Official CLI business errors may be text. Never echo raw responses.
+                code=data.get('code') if isinstance(data,dict) else None
+                match=re.search(r'\bcode[=:]\s*(\d+)\b',p.stderr)
+                if code is None and match:code=int(match.group(1))
+                if isinstance(code,str) and code.isdigit():code=int(code)
+                if code in (307001,307029):raise Failure('Toy session expired; log in locally and replace TOY_SESSION_TOKEN.')
+                if code is not None:
+                    message=data.get('message','') if isinstance(data,dict) else ''
+                    found=re.search(r'\bmessage=(.*)',p.stderr)
+                    if not message and found:message=found.group(1)
+                    message=str(message).replace(self.env.get('TOY_CLI_SESSION_TOKEN',''),'[redacted]') if self.env.get('TOY_CLI_SESSION_TOKEN') else str(message)
+                    message=re.sub(r'https?://\S+','[URL]',message)
+                    message=re.sub(r'[A-Za-z0-9_=-]{48,}','[redacted]',message)
+                    raise Failure(f'Toy rejected the request (code {code}): '+json.dumps(message[:240],ensure_ascii=False))
+                if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.')
+                if re.search(r'登录态已失效|请执行.{0,12}login|session expired|unauthorized',p.stderr,re.I):raise Failure('Toy session expired; log in locally and replace TOY_SESSION_TOKEN.')
+                usage=bool(re.search(r'unknown flag|unknown command|accepts? \d+ arg|usage:|invalid argument|required flag',p.stderr,re.I))
+                if safe_read and not usage and attempt+1<attempts:
+                    time.sleep(0.25*(2**attempt));continue
+                raise Failure('Toy query failed; check credentials, network and CLI compatibility')
+            if not isinstance(data,dict):
+                if write:raise Unknown('Invalid submission response; result is unknown.')
+                if safe_read and attempt+1<attempts:
+                    time.sleep(0.25*(2**attempt));continue
+                raise Failure('Invalid CLI JSON response')
+            return data
     def account(self):
         uid=self.call(['whoami']).get('uid')
         if not valid_int(uid):raise Failure('CLI did not return a valid current account')
@@ -296,7 +341,7 @@ def write_operation(args):
     if args.mode=='preview' and event=='release':raise Failure('Release cannot silently generate a new preview')
     gh=GitHub();bundle,manifest,cfg=load_bundle(args,args.mode=='submit' and not args.override)
     if args.override and os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch':raise Failure('Override is available only through manual dispatch')
-    if args.mode=='submit':validate_submission_release(gh,args,manifest)
+    release=validate_submission_release(gh,args,manifest) if args.mode=='submit' else None
     sha=manifest['sha'];toy=Toy()
     try:
         account=toy.account()
@@ -310,13 +355,21 @@ def write_operation(args):
             doctor(bundle/'package.zip',cfg['slug'])
             if chosen:argv=['update',str(chosen['id']),str(bundle/'package.zip')]
             else:argv=['create',str(bundle/'package.zip'),'--slug',cfg['slug'],*toy.metadata_flags('create',{'visibility':'link-only',**cfg['create']},bundle)]
-            result=toy.call(argv)
-            url=result.get('preview_url')
-            if not isinstance(url,str) or not url.startswith('https://'):raise Failure('No valid preview URL returned')
-            manifest.update(preview=True,account=account,toy_id=chosen['id'] if chosen else None,preview_run=os.environ['GITHUB_RUN_ID'],cli_version=toy.version)
-            save(bundle/'manifest.json',manifest)
-            rec=gh.record(sha,cfg['slug'],'preview',account=account,toy_id=manifest['toy_id'],package_sha=manifest['package_sha'],artifact_name='toy-preview-'+sha)
-            gh.status(rec,'success','Preview generated; review not submitted')
+            # Confirm GitHub can persist preview evidence before uploading to Toy.
+            rec=gh.record(sha,cfg['slug'],'preview',account=account,toy_id=chosen['id'] if chosen else None,package_sha=manifest['package_sha'],artifact_name='toy-preview-'+sha)
+            gh.status(rec,'in_progress','Preview upload about to start; no review submitted')
+            operation_summary('preview',sha,cfg['slug'],target='update' if chosen else 'create',toy_id=chosen['id'] if chosen else None,package_sha=manifest['package_sha'],deployment_id=rec['id'],run_id=os.environ.get('GITHUB_RUN_ID'),run_attempt=os.environ.get('GITHUB_RUN_ATTEMPT','1'),trigger=event,actor=os.environ.get('GITHUB_ACTOR'),requested_at=rec.get('payload',{}).get('requested_at'))
+            try:
+                result=toy.call(argv)
+                url=result.get('preview_url')
+                if not isinstance(url,str) or not url.startswith('https://'):raise Failure('No valid preview URL returned')
+                manifest.update(preview=True,account=account,toy_id=chosen['id'] if chosen else None,preview_run=os.environ['GITHUB_RUN_ID'],cli_version=toy.version)
+                save(bundle/'manifest.json',manifest)
+                gh.status(rec,'success','Preview generated; review not submitted')
+            except Failure:
+                try:gh.status(rec,'error','Preview result not confirmed; no review submitted')
+                except Failure:pass
+                raise
             output('status','previewed');output('bundle',bundle);output('artifact-name','toy-preview-'+sha);output('package-sha',manifest['package_sha'])
             # Confirmed public preview path contains an opaque capability. Show only via explicit opt-in.
             summary('Preview generated. / 已生成预览。Package SHA-256: `'+manifest['package_sha']+'`')
@@ -326,7 +379,16 @@ def write_operation(args):
                 summary('Preview URL withheld. Set expose-preview=true only for content you intend to share; public workflow artifacts are not private storage.')
             return
         kind='metadata' if args.mode=='sync-metadata' else 'submission'
-        fingerprint=hashlib.sha256(canonical(cfg['metadata']).encode()).hexdigest() if kind=='metadata' else manifest['package_sha']
+        metadata_fields=sorted(cfg['metadata']) if kind=='metadata' else []
+        metadata_images={}
+        if kind=='metadata':
+            for field in ('poster','icon'):
+                if field in cfg['metadata']:
+                    image_sha=manifest.get('files',{}).get(cfg['metadata'][field])
+                    if not isinstance(image_sha,str) or not re.fullmatch(r'[0-9a-f]{64}',image_sha):raise Failure('Metadata image digest is missing from the sealed bundle')
+                    metadata_images[field]=image_sha
+            fingerprint=hashlib.sha256(canonical({'fields':cfg['metadata'],'images_sha256':metadata_images}).encode()).hexdigest()
+        else:fingerprint=manifest['package_sha']
         if not fingerprint:raise Failure('No package to submit')
         identity=[args.release_id or 'manual',kind,sha,fingerprint]
         if kind=='metadata' or args.override:identity.append(os.environ.get('GITHUB_RUN_ID',''))
@@ -334,7 +396,10 @@ def write_operation(args):
         for old in gh.records(cfg['slug']):
             if old['payload'].get('kind') not in {'submission','metadata'}:continue
             state=gh.state(old)
-            if state in {'pending','in_progress','queued','error'}:raise Failure(f"Previous write outcome is unknown (Deployment {old['id']}). Resolve it manually before another write.")
+            if state in {'pending','in_progress','queued','error'}:
+                previous=old['payload']
+                operation_summary('blocked-previous-write',previous.get('sha'),previous.get('slug'),toy_id=previous.get('toy_id'),package_sha=previous.get('package_sha'),metadata_sha=previous.get('metadata_sha'),metadata_fields=previous.get('metadata_fields'),metadata_images_sha256=previous.get('metadata_images_sha256'),deployment_id=old['id'],run_id=previous.get('run_id'),run_attempt=previous.get('run_attempt'),release_id=previous.get('release_id'),trigger=previous.get('trigger'),actor=previous.get('actor'),override=previous.get('override'),requested_at=previous.get('requested_at') or old.get('created_at'))
+                raise Failure(f"Previous write outcome is unknown (Deployment {old['id']}). Resolve it manually before another write.")
             if old['payload'].get('key')==key and state=='success':
                 summary('This exact operation was already accepted; no repeat submission. / 此操作已提交，不重复提审。');output('status','already-submitted');return
         if kind=='metadata':
@@ -345,9 +410,10 @@ def write_operation(args):
             if chosen:argv=['update',str(chosen['id']),str(bundle/'package.zip'),'--yes']
             else:argv=['create',str(bundle/'package.zip'),'--slug',cfg['slug'],*toy.metadata_flags('create',{'visibility':'link-only',**cfg['create']},bundle),'--yes']
         # Persist intent before launching the write. If runner dies afterwards, retry is blocked.
-        rec=gh.record(sha,cfg['slug'],kind,key=key,account=account,toy_id=chosen['id'] if chosen else None,package_sha=fingerprint,release_id=args.release_id,override=args.override)
+        rec=gh.record(sha,cfg['slug'],kind,key=key,account=account,toy_id=chosen['id'] if chosen else None,package_sha=fingerprint,metadata_sha=fingerprint if kind=='metadata' else None,metadata_fields=metadata_fields if kind=='metadata' else None,metadata_images_sha256=metadata_images if kind=='metadata' else None,release_id=args.release_id,release_tag=release.get('tag_name') if release else None,trigger=event,override=args.override)
         gh.status(rec,'in_progress','Request about to be sent; an interrupted run requires reconciliation')
         output('deployment-id',rec['id'])
+        operation_summary('sync-metadata' if kind=='metadata' else 'submit',sha,cfg['slug'],target='update' if chosen else 'create',toy_id=chosen['id'] if chosen else None,package_sha=fingerprint if kind=='submission' else None,metadata_sha=fingerprint if kind=='metadata' else None,metadata_fields=metadata_fields if kind=='metadata' else None,metadata_images_sha256=metadata_images if kind=='metadata' else None,deployment_id=rec['id'],run_id=os.environ.get('GITHUB_RUN_ID'),run_attempt=os.environ.get('GITHUB_RUN_ATTEMPT','1'),release_id=args.release_id,release_tag=release.get('tag_name') if release else None,trigger=event,actor=os.environ.get('GITHUB_ACTOR'),override=args.override,requested_at=rec.get('payload',{}).get('requested_at'))
         summary('Submission record / 提交记录: Deployment `'+str(rec['id'])+'`. If interrupted, use resolve-unknown after checking Bilibili.')
         try:
             result=toy.call(argv,write=True)
@@ -381,6 +447,7 @@ def resolve_unknown(args):
     gh=GitHub();rec=gh.call('deployments/'+str(args.deployment_id));payload=rec.get('payload',{})
     if payload.get('tool')!=TOOL or payload.get('kind') not in {'submission','metadata'}:raise Failure('Not a Toy write record')
     if gh.state(rec) not in {'pending','in_progress','queued','error'}:raise Failure('Record is already resolved')
+    operation_summary('resolve-unknown',payload.get('sha'),payload.get('slug'),target='update' if payload.get('toy_id') else 'create',toy_id=payload.get('toy_id'),package_sha=payload.get('package_sha') if payload.get('kind')=='submission' else None,metadata_sha=payload.get('metadata_sha') if payload.get('kind')=='metadata' else None,metadata_fields=payload.get('metadata_fields'),metadata_images_sha256=payload.get('metadata_images_sha256'),deployment_id=rec.get('id'),run_id=payload.get('run_id'),run_attempt=payload.get('run_attempt'),release_id=payload.get('release_id'),release_tag=payload.get('release_tag'),trigger=payload.get('trigger'),actor=payload.get('actor'),override=payload.get('override'),requested_at=payload.get('requested_at') or rec.get('created_at'),resolution=args.resolution)
     if args.resolution=='not-accepted':
         gh.status(rec,'failure','User verified not accepted on Bilibili; manual retry is now allowed')
     elif args.resolution=='accepted':
@@ -423,17 +490,21 @@ def plan(args):
     if name!='pull_request':
         comparison=gh.call('compare/'+sha+'...'+urllib.parse.quote(default,safe=''))
         if comparison['status'] not in {'ahead','identical'}:raise Failure('Source must be in default-branch history before accessing Toy credentials')
-    output('source-sha',sha);output('operation',operation);output('build',str(build).lower());output('release-id',release_id);output('override',str(name=='workflow_dispatch' and inputs.get('operation')=='override').lower())
+    override=name=='workflow_dispatch' and inputs.get('operation')=='override'
+    output('source-sha',sha);output('operation',operation);output('build',str(build).lower());output('release-id',release_id);output('override',str(override).lower())
+    operation_summary('plan-'+operation,sha,None,release_id=release_id,release_tag=tag if operation=='submit' else None,run_id=os.environ.get('GITHUB_RUN_ID'),run_attempt=os.environ.get('GITHUB_RUN_ATTEMPT','1'),trigger=name,actor=os.environ.get('GITHUB_ACTOR'),override=override,rebuild=build and operation=='submit')
     if operation=='submit' and not build:
         records=gh.pages('deployments?task=toy%3Apreview&sha='+sha)
         for rec in records:
             p=rec.get('payload',{})
             if not isinstance(p,dict) or p.get('tool')!=TOOL or p.get('schema')!=SCHEMA or p.get('sha')!=sha or gh.state(rec)!='success':continue
+            if not re.fullmatch(r'[1-9][0-9]*',str(p.get('run_id',''))) or not re.fullmatch(r'[0-9a-f]{64}',str(p.get('package_sha',''))):continue
             run=gh.call('actions/runs/'+str(p['run_id']))
             if run.get('event') not in {'push','workflow_dispatch'} or run.get('conclusion')!='success' or run.get('head_branch')!=default or run.get('head_repository',{}).get('id')!=repo['id'] or run.get('path','').split('@')[0]!=args.workflow_path:continue
             artifacts=gh.pages('actions/runs/'+str(p['run_id'])+'/artifacts','artifacts')
-            candidates=[a for a in artifacts if a.get('name')=='toy-preview-'+sha and not a.get('expired')]
+            candidates=[a for a in artifacts if a.get('name')=='toy-preview-'+sha and not a.get('expired') and valid_int(a.get('id'))]
             if len(candidates)==1:
+                operation_summary('selected-preview',sha,p.get('slug'),toy_id=p.get('toy_id'),package_sha=p['package_sha'],preview_run=p['run_id'],run_attempt=p.get('run_attempt'),artifact_id=candidates[0]['id'],release_id=release_id,release_tag=tag,trigger=name,requested_at=p.get('requested_at') or rec.get('created_at'))
                 output('artifact-id',candidates[0]['id']);output('preview-run',p['run_id']);output('expected-package-sha',p['package_sha']);return
         raise Failure('No usable successful preview artifact for this Release commit. Generate a preview first, or explicitly dispatch override for this Release.')
 
