@@ -1,0 +1,66 @@
+{
+  "trial": "documentation-only plain HTML integration",
+  "performed_by": "AI agent; no human trial",
+  "source": {
+    "repository": "https://github.com/drdavid-kor/bilibili-toy-deploy",
+    "release": "v0.1.0-beta.3",
+    "commit": "340331a58a6007dbb78628932600d3ecc37be276",
+    "read": [
+      "README.md",
+      "docs/quickstart-new.md",
+      "docs/authentication.md"
+    ],
+    "official_toy_cli": "v0.6.4"
+  },
+  "fixture": {
+    "repository": "https://github.com/drdavid-kor/bilibili-toy-html-example",
+    "private": true,
+    "default_branch": "main",
+    "slug": "toy-action-html-20261028",
+    "title": "HTML Toy 发布流程示例",
+    "visibility": "link-only",
+    "toy_id": 48671274043392,
+    "placeholder_artwork": true,
+    "local_build": "The documented HTML template has no build step; site/ is the publishable directory. Both hosted workflow prechecks passed with a non-blocking unhashed JS/CSS filename warning."
+  },
+  "v1": {
+    "commit": "4a8fe19f09eb3831516bc9c354f9ce22499c0099",
+    "preview_run": 40549620460,
+    "preview_artifact_id": 12754176816,
+    "package_sha256": "ccf71bb9e2121342eedef9953340732a0e6c214b992c483488672bc81fa16d83",
+    "browser_check": "Hosted preview rendered at desktop and phone width; bilingual copy and click counter worked.",
+    "release": "verification-v1",
+    "release_run": 40549961991,
+    "release_result": "success; reused the preview artifact and package SHA, skipped rebuild, target=create, submitted for review",
+    "platform_read_only_observation": {
+      "observed_at_utc": "2026-10-27T17:23:45.988551+00:00",
+      "status": "published",
+      "url_present": true,
+      "scope": "One observation after first submission; no audit-pending or missing-URL state was observed."
+    }
+  },
+  "v2": {
+    "change": "Two bilingual HTML paragraphs changed; no metadata or artwork change.",
+    "commit": "961c24ed906d3a588b730aca524415d3e98ffc4b",
+    "preview_run": 40550110700,
+    "preview_artifact_id": 12753573885,
+    "package_sha256": "51405dc960130f0ec8acc43c8031f18ad150ad665728686eafa0df491721f82c",
+    "browser_check": "Hosted preview visibly showed new English and Mandarin copy at desktop and phone width.",
+    "release": "verification-v2",
+    "release_run": 40550289758,
+    "release_result": "success; reused the preview artifact and package SHA, skipped rebuild, target=update, same Toy ID, submitted for review"
+  },
+  "guide_friction": [
+    "The three public entry documents ask for a local static precheck but do not give a direct local command; the generated workflow ran its hosted precheck.",
+    "Authentication step 6 asks for a manual preview immediately after setting the Secret, before the new empty repository has a workflow; the first main-branch push produced and verified the preview instead."
+  ],
+  "limits": [
+    "The two successful Release runs prove platform acceptance for review, not that v2 is live.",
+    "A missing-URL or audit-pending list response during an update was not reproduced."
+  ],
+  "guide_follow_up": {
+    "auth_step_6": "Current documentation now distinguishes first workflow push from manual preview of an existing workflow.",
+    "local_precheck": "Current new-project guide now includes the copyable vendored doctor command.",
+    "runtime_change": "None; documentation clarification after the beta.3 trial."
+  }
+}

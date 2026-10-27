@@ -22,6 +22,14 @@ python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy
 
 脚手架已把同一发行版的示例工作流放进 `.github/workflows/`。检查其中的 Action 标签、构建命令和输出目录：纯 HTML 模板直接使用 `site/`，Vite 模板需要运行 `npm ci` 和 `npm run build` 并使用 `dist/`。工作流不应猜测项目类型。
 
+可选：在解压后的发行版目录，先对生成的纯 HTML 目录做一次本地静态预检；若选了 Vite，先在 `my-toy/` 运行 `npm ci`、`npm run build`，然后回到发行版目录，把命令中的 `site` 改为 `dist`：
+
+```bash
+python3 vendor/toy_doctor.py ./my-toy/site --slug my-toy --require-root-index
+```
+
+把路径和 slug 换成自己的值。修复 ERROR，逐条了解 WARN；本地预检不代替后面的真实 Toy 预览。
+
 ## 2 配置 GitHub
 
 在 GitHub 新建一个空仓库，不要勾选自动生成 README、`.gitignore` 或许可证。先在本机运行官方 `toy login` 和 `gh auth login`。仍在已下载的本项目发行版目录时，使用随发行版提供的工具设置仓库 Secret；示例中的仓库名需换成自己的：

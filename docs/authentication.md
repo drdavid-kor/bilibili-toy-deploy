@@ -29,7 +29,7 @@ python3 scripts/install_cli.py --destination "$HOME/.local/bin/toy"
    脚本默认读取本机 `~/.toy/session.json` 的 `session_token`，通过标准输入交给 `gh secret set`，不把令牌放入命令行参数、日志或项目文件。会话文件在其他位置时，添加 `--session-file /absolute/path/session.json`。脚本只接受含有 `session_token` 字符串字段的 JSON。
 
 5. 在 GitHub 仓库的 Actions Secret 列表确认存在 `TOY_SESSION_TOKEN`。GitHub 不允许回读其明文，也不需要把它复制到 issue、聊天或 README。
-6. 运行一次手动预览，核对工作流显示的账号和 Toy 目标。随后再使用主分支预览或 Release 提审。
+6. 新建的空仓库先按[从零创建指南](quickstart-new.md)推送含工作流的主分支，核对自动预览显示的账号和 Toy 目标；仓库已有工作流时，也可以手动运行 `preview`。确认预览后再发布 Release 提审。
 
 如果脚本报告找不到文件，先确定本机 CLI 的会话位置；不要直接把完整会话文件上传到 GitHub。若当前 CLI 的会话格式没有 `session_token` 字段，停止并查看当前版本的认证说明，不要猜测或粘贴未知字段。
 

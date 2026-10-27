@@ -1,0 +1,20 @@
+{
+  "source": "GitHub Actions Secret metadata and successful fresh hosted workflow runs, read on 2026-10-28 Asia/Shanghai",
+  "secret_name": "TOY_SESSION_TOKEN",
+  "secret_created_at": "2026-10-27T15:50:44Z",
+  "secret_updated_at": "2026-10-27T15:50:44Z",
+  "first_run": {
+    "id": 40535027750,
+    "started_at": "2026-10-27T15:50:50Z",
+    "completed_at": "2026-10-27T15:51:06Z",
+    "conclusion": "success"
+  },
+  "later_run": {
+    "id": 40548477069,
+    "started_at": "2026-10-27T17:13:08Z",
+    "completed_at": "2026-10-27T17:14:14Z",
+    "conclusion": "success"
+  },
+  "run_start_interval_seconds": 4938,
+  "interpretation": "The repository Secret was not replaced between these successful hosted runs; the starts were 82 minutes 18 seconds apart. This is an observed interval, not a credential TTL or proof of local logout revocation. No Secret value was read from GitHub or saved in this record."
+}

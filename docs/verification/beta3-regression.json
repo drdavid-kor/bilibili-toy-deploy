@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-28 Asia/Shanghai",
+  "scope": "Single external regression in a private synthetic existing React fixture; no site/config change and no additional metadata operation",
+  "repository": "drdavid-kor/bilibili-toy-existing-example (private)",
+  "action_ref": "drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.3",
+  "action_commit": "340331a58a6007dbb78628932600d3ecc37be276",
+  "consumer_commit": "1dc6b280d09dc61ed1e0a25273609bc0208483a4",
+  "consumer_commit_changed_files": [
+    ".github/workflows/toy.yml"
+  ],
+  "existing_frontend_ci_run": 40548819508,
+  "toy_id": 48661048331264,
+  "package_sha256": "b9104cf18fb7cfecf89ae7688a2d525c2875c377ab27eeaf83efd9988cf8b227",
+  "preview": {
+    "run_id": 40548819419,
+    "run_status": "success",
+    "artifact_id": 12753379094,
+    "deployment_id": 7365323491,
+    "deployment_status_history": [
+      {
+        "state": "in_progress",
+        "at_utc": "2026-10-27T17:15:49Z"
+      },
+      {
+        "state": "success",
+        "at_utc": "2026-10-27T17:15:51Z"
+      }
+    ],
+    "downloaded_sealed_artifact_package_digest_matches": true
+  },
+  "release": {
+    "tag": "verification-v3",
+    "id": 425764961,
+    "prerelease": false,
+    "source_commit": "1dc6b280d09dc61ed1e0a25273609bc0208483a4",
+    "run_id": 40549023286,
+    "run_status": "success",
+    "build_job": "skipped",
+    "submission_deployment_id": 7365351037,
+    "submission_deployment_state": "success",
+    "target": "update",
+    "override": false,
+    "same_source_and_package_as_preview": true
+  },
+  "summary_checks": {
+    "selected_preview_fields_present": [
+      "preview_run",
+      "artifact_id",
+      "package_sha",
+      "release_id",
+      "release_tag",
+      "slug",
+      "source_sha",
+      "toy_id",
+      "trigger"
+    ],
+    "submit_fields_present": [
+      "release_id",
+      "release_tag",
+      "source_sha",
+      "slug",
+      "toy_id",
+      "trigger",
+      "package_sha",
+      "deployment_id",
+      "target"
+    ],
+    "visible_summary_contains_session_token": false,
+    "visible_summary_contains_raw_toy_cli_response": false,
+    "preview_capability_url_omitted_from_this_record": true
+  },
+  "limit": "Success means Toy accepted review submission. It does not establish final approval or live status."
+}
