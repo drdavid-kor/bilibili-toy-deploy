@@ -18,7 +18,7 @@ python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy
 
 脚手架会在**新目录**建立纯 HTML 项目，并复制同版本的 `examples/workflows/toy.yml`。若准备使用 Vite，把 `--template html` 改成 `--template vite`。React 和 Vue 项目的接入参考同版本 `examples/react/`、`examples/vue/`。这个新目录才是你的 Toy 仓库；不要把 Action 的整个开发仓库当作作品发布。示例工作流目前指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`；该标签公开发布前，其他仓库不能运行这个 Action。
 
-模板应提供可访问的首页、相对资源路径、一个能运行的构建命令，以及 `toy.config.json`。填写自己的 slug 和标题。首次创建默认 `link-only`。slug 是作品地址的一部分，发布后不能靠普通更新修改；请在首次提审前检查拼写。[配置说明](configuration.md)解释各字段。
+模板提供可访问的首页、相对资源路径、一个能运行的构建命令，以及 `toy.config.json`。它还自带 `toy-assets/poster.png`（1200×900）和 `toy-assets/icon.png`（256×256），配置已经引用这些图片，因此首次上手不用制作素材。正式提审前请换成与作品一致的封面和图标。填写自己的 slug 和标题。首次创建默认 `link-only`。slug 是作品地址的一部分，发布后不能靠普通更新修改；请在首次提审前检查拼写。[配置说明](configuration.md)解释各字段。
 
 脚手架已把同一发行版的示例工作流放进 `.github/workflows/`。检查其中的 Action 标签、构建命令和输出目录：纯 HTML 模板直接使用 `site/`，Vite 模板需要运行 `npm ci` 和 `npm run build` 并使用 `dist/`。工作流不应猜测项目类型。
 

@@ -11,7 +11,9 @@
   "create": {
     "title": "My Toy",
     "category": "TOOL",
-    "visibility": "link-only"
+    "visibility": "link-only",
+    "poster": "toy-assets/poster.png",
+    "icon": "toy-assets/icon.png"
   },
   "metadata": {}
 }
@@ -27,9 +29,10 @@
 | `create.title` | 首次创建的标题 | 日常更新不覆盖平台现值 |
 | `create.category`（可选） | 首次创建的分类 | 日常更新不覆盖平台现值 |
 | `create.visibility`（可选） | 首次创建可见性，默认 `link-only` | 日常更新不覆盖平台现值 |
+| `create.poster`、`create.icon` | 首次创建使用的封面与图标路径 | 日常更新不覆盖平台现值 |
 | `metadata`（可选） | 手动元信息同步时的字段 | 仅手动同步并仅显式填写的字段生效 |
 
-图片字段 `icon`、`poster` 填写仓库内相对路径。分类可选 `GAME`、`INTERACTIVE_PLAY`、`TOOL`、`TEST`、`GUIDE`、`COLLECTION`、`OTHER`。测试版只接受 `link-only` 和 `public` 两种显式可见性；已有密码访问作品在普通内容更新中保持原配置，但当前不支持通过此配置设置或修改访问密码。配置文件中省略一个元信息字段表示“保持原值”，不能用空字符串代替删除指令。
+图片字段 `icon`、`poster` 填写仓库内相对路径。模板已提供 `toy-assets/poster.png`（1200×900）和 `toy-assets/icon.png`（256×256）；改造已有项目前可复制这两张占位图，以便完成首次创建。B 站真实提审曾在缺少素材的情况下拒绝创建，即使预览已生成；完整原因仍以当前平台响应为准。为减少这类失败，首次创建路径应提供有效图片。分类可选 `GAME`、`INTERACTIVE_PLAY`、`TOOL`、`TEST`、`GUIDE`、`COLLECTION`、`OTHER`。测试版只接受 `link-only` 和 `public` 两种显式可见性；已有密码访问作品在普通内容更新中保持原配置，但当前不支持通过此配置设置或修改访问密码。配置文件中省略一个元信息字段表示“保持原值”，不能用空字符串代替删除指令。
 
 ## 事件与结果
 

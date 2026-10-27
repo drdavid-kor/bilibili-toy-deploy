@@ -19,11 +19,19 @@ REPO = "example/toy-site"
 
 
 class FakeGitHub:
-    def __init__(self, records=None, states=None):
+    def __init__(self, records=None, states=None, release_sha=SHA):
         self.saved = []
         self.statuses = []
         self.records_data = records or []
         self.states = states or {}
+        self.release_sha = release_sha
+
+    def call(self, path):
+        if path == "releases/77":
+            return {"id": 77, "tag_name": "v1", "draft": False, "prerelease": False, "published_at": "2026-10-28T00:00:00Z"}
+        if path == "commits/v1":
+            return {"sha": self.release_sha}
+        raise action.Failure("GitHub resource not found")
 
     def records(self, slug, kind=None):
         return [r for r in self.records_data if not kind or r["payload"]["kind"] == kind]
@@ -121,6 +129,7 @@ class ActionTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {
             "GITHUB_REPOSITORY": REPO, "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_RUN_ID": "17",
             "GITHUB_ACTOR": "maintainer", "GITHUB_SHA": SHA,
+            "GITHUB_EVENT_PATH": str(self.base / "not-present-event.json"),
         })
         self.env.start()
         self.addCleanup(self.env.stop)
@@ -256,6 +265,42 @@ class ActionTests(unittest.TestCase):
                 with self.assertRaisesRegex(action.Failure, "manual dispatch"):
                     action.write_operation(self.operation_args(path, override=True))
                 construct_toy.assert_not_called()
+
+    def test_submit_revalidates_published_release_tag_and_source_before_toy_access(self):
+        path = self.bundle()
+        self.mark_preview(path)
+        for release_id, release_sha, source_sha, error in (
+            ("", SHA, SHA, "published Release"),
+            ("88", SHA, SHA, "resource not found"),
+            ("77", "b" * 40, SHA, "does not point"),
+            ("77", SHA, "b" * 40, "commit"),
+        ):
+            with self.subTest(release_id=release_id, release_sha=release_sha, source_sha=source_sha):
+                args = self.operation_args(path)
+                args.release_id = release_id
+                args.source_sha = source_sha
+                gh = FakeGitHub([self.binding()], release_sha=release_sha)
+                with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy") as construct_toy:
+                    with self.assertRaisesRegex(action.Failure, error):
+                        action.write_operation(args)
+                    construct_toy.assert_not_called()
+
+    def test_submit_matches_event_release_or_manual_selection(self):
+        manifest = {"sha": SHA}
+        args = SimpleNamespace(release_id="77", source_sha=SHA, override=False)
+        event = self.base / "event.json"
+        event.write_text(json.dumps({"release": {"id": 88}}))
+        with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "release", "GITHUB_EVENT_PATH": str(event)}):
+            with self.assertRaisesRegex(action.Failure, "Triggered Release"):
+                action.validate_submission_release(FakeGitHub(), args, manifest)
+        event.write_text(json.dumps({"inputs": {"operation": "override", "release-tag": "other"}}))
+        args.override = True
+        with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_EVENT_PATH": str(event)}):
+            with self.assertRaisesRegex(action.Failure, "same Release"):
+                action.validate_submission_release(FakeGitHub(), args, manifest)
+        event.write_text(json.dumps({"inputs": {"operation": "override", "release-tag": "v1"}}))
+        with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_EVENT_PATH": str(event)}):
+            self.assertEqual(action.validate_submission_release(FakeGitHub(), args, manifest)["id"], 77)
 
     def test_release_evidence_selects_only_same_repo_successful_preview(self):
         event = self.base / "release.json"

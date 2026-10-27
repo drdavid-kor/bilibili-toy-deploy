@@ -250,6 +250,32 @@ def resolve_target(gh,toy,cfg,account,sha):
 def trusted_event():
     if os.environ.get('GITHUB_EVENT_NAME') not in {'push','workflow_dispatch','release'}:raise Failure('Publishing is restricted to push, workflow_dispatch or release; PRs may only check packages.')
 
+def validate_submission_release(gh,args,manifest):
+    """Bind a submission to one published Release and its exact source commit."""
+    release_id=str(args.release_id)
+    if not re.fullmatch(r'[1-9][0-9]*',release_id):raise Failure('Submission requires a valid Release ID')
+    sha=manifest.get('sha')
+    if not isinstance(sha,str) or not SHA.fullmatch(sha) or args.source_sha!=sha:
+        raise Failure('Submission source SHA must match the sealed bundle')
+    release=gh.call('releases/'+release_id)
+    if not isinstance(release,dict) or release.get('id')!=int(release_id) or release.get('draft') or release.get('prerelease') or not release.get('published_at'):
+        raise Failure('Release is missing, unpublished or a prerelease')
+    tag=release.get('tag_name')
+    if not isinstance(tag,str) or not tag:raise Failure('Release has no valid tag')
+    commit=gh.call('commits/'+urllib.parse.quote(tag,safe=''))
+    if not isinstance(commit,dict) or commit.get('sha')!=sha:raise Failure('Release tag does not point to the sealed bundle commit')
+    event_path=os.environ.get('GITHUB_EVENT_PATH')
+    if event_path and Path(event_path).is_file():
+        event=jsonfile(event_path)
+        if os.environ.get('GITHUB_EVENT_NAME')=='release':
+            if event.get('release',{}).get('id')!=int(release_id):raise Failure('Triggered Release does not match the requested Release ID')
+        elif os.environ.get('GITHUB_EVENT_NAME')=='workflow_dispatch':
+            inputs=event.get('inputs',{})
+            expected='override' if args.override else 'submit'
+            if inputs.get('operation')!=expected or inputs.get('release-tag')!=tag:
+                raise Failure('Manual submission must select the same Release and operation')
+    return release
+
 def write_operation(args):
     trusted_event()
     event=os.environ.get('GITHUB_EVENT_NAME')
@@ -258,6 +284,7 @@ def write_operation(args):
     if args.mode=='preview' and event=='release':raise Failure('Release cannot silently generate a new preview')
     gh=GitHub();bundle,manifest,cfg=load_bundle(args,args.mode=='submit' and not args.override)
     if args.override and os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch':raise Failure('Override is available only through manual dispatch')
+    if args.mode=='submit':validate_submission_release(gh,args,manifest)
     sha=manifest['sha'];toy=Toy()
     try:
         account=toy.account()

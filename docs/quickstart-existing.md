@@ -18,7 +18,7 @@ Toy 页面位于 `/toy/<slug>/`。检查首页 HTML 中的脚本、样式、图�
 
 ## 3 指定目标 Toy
 
-在 `toy.config.json` 填写本项目的 slug、输出目录和首次创建所需的标题等信息；凭据不写在这个文件里。已有 Toy 可以显式填写 ID。未填 ID 时，Action 会核对当前登录账号并按 slug 完整查询：唯一匹配就接管，零匹配才可能创建。slug 相同意味着本仓库后续会更新那个 Toy，接入前请确认对象正确。[配置说明](configuration.md)
+在 `toy.config.json` 填写本项目的 slug、输出目录和首次创建所需的标题等信息；凭据不写在这个文件里。若此仓库要首次创建 Toy，请同时填写 `create.poster`、`create.icon`，并把对应图片放在项目仓库里。可以先从同版本 `templates/html/toy-assets/` 复制已配置的占位封面与图标，之后换成自己的图片；不必在首次配置前自行制作。现有作品接管后，普通内容更新会保留 B 站上的封面与图标。已有 Toy 可以显式填写 ID。未填 ID 时，Action 会核对当前登录账号并按 slug 完整查询：唯一匹配就接管，零匹配才可能创建。slug 相同意味着本仓库后续会更新那个 Toy，接入前请确认对象正确。[配置说明](configuration.md)
 
 先在本机完成官方 `toy login` 和 `gh auth login`。在下载并解压的同版本项目目录运行 `python3 scripts/set_secret.py --repo OWNER/REPOSITORY`，把示例仓库名换成自己的。工具将会话设置为 GitHub Actions Secret `TOY_SESSION_TOKEN`，不应打印会话值。前提与更新方法见[认证说明](authentication.md)。示例工作流会向临时 `GITHUB_TOKEN` 申请部署记录写权限。会话只注入发布步骤，不注入安装依赖或构建步骤，也不注入 PR 工作流。
 
