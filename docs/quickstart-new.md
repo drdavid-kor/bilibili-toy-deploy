@@ -7,6 +7,7 @@
 - 一个可发布 Toy 的 B 站账号，以及一个可创建仓库、运行 GitHub Actions 的 GitHub 账号。
 - 使用 [认证说明](authentication.md)配置会话。认证属于实验性接入，具体取得方式和失效处理以该页及当前发行版为准。不要把会话填进 `toy.config.json`、Issue 或聊天。
 - 选择已发布的 Action 标签，并从同一标签取得模板和工作流。不要混用不同版本的模板、配置和 Action。
+- 若同一 B 站账号有作品正在审核且列表暂缺其 URL，新仓库可能暂时无法自动识别 slug；即使它来自另一个仓库也会影响首次接入。等列表可核验后重跑原提交的预览，见[故障排查](troubleshooting.md)。
 
 ## 1 建立最小项目
 
@@ -81,4 +82,4 @@ Codex 用户可运行已验证的安装命令：
 npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-然后对编程助手说：“用 toy-github 在这个空目录创建纯 HTML Toy 项目，并接入 GitHub 发布。”Skill 会建立最小项目和工作流；你仍需在 GitHub 安全地设置会话，并检查真实预览。只有一个创意时，Skill 不会自动替你完成全部业务功能。本人试用可按[简短试用指南](verification/user-trial.md)记录卡点。
+然后对编程助手说：“用 toy-github 在这个空目录创建纯 HTML Toy 项目，并接入 GitHub 发布。”Skill 会建立最小项目和工作流；你仍需在 GitHub 安全地设置会话，并检查真实预览。只有一个创意时，Skill 不会自动替你完成全部业务功能。独立上手时可按[简短试用指南](verification/user-trial.md)记录卡点。

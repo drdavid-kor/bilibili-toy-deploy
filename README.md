@@ -2,7 +2,7 @@
 
 把 GitHub 上的静态网页项目接入哔哩哔哩 Toy。这个仓库提供 GitHub Action、纯 HTML 与 Vite 起点、已有项目接入示例，以及帮助编程助手完成适配的 `toy-github` Skill。它调用 B 站官方 `toy` CLI；B 站接受提审后仍需等待平台审核。
 
-**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)。此前公开版本已在外部仓库验证新建 Vite 与已有 React 项目的预览、首次提审和下一版本更新；本人试用仍待反馈，见[验收记录](docs/verification/acceptance.md)。
+**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3)。两个不继承实现对话的 sub-agent 已仅凭下方提示词和指定场景，完成新建俄罗斯方块与已有 `muzzle-device-lab` 的真实预览及同包提审；详见[验收记录](docs/verification/acceptance.md)。
 
 ## 复制给编程助手
 
@@ -32,6 +32,8 @@
 | --- | --- | --- |
 | 想新建一个 Toy 网页 | [从零创建指南](docs/quickstart-new.md) | 一个纯 HTML 或 Vite 最小项目、配置文件和发布工作流 |
 | 已有网页前端项目 | [已有项目接入指南](docs/quickstart-existing.md) | 保留现有项目，适配 Toy 子路径并接入发布工作流 |
+
+**首次接入的限制：**同一 B 站账号中，其他作品审核期间若列表暂缺 URL，新仓库也可能暂停自动识别 slug；待列表可核验后重跑预览。独立试用已实际遇到并按文档恢复。[故障排查](docs/troubleshooting.md)
 
 已经有 Toy 的开发者可填入其 ID；若没有 ID，Action 会在当前 B 站账号下完整查询 slug，唯一匹配时自动接管。查询失败或结果不唯一时停止，不直接创建第二个 Toy。[配置规则](docs/configuration.md)
 
@@ -78,7 +80,7 @@ Vite 项目把 `html` 改为 `vite`。两个起点都自带 `toy-assets/poster.p
 npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-可对编程助手说：“用 `toy-github` 在空目录创建一个 Vite Toy 项目并接入 GitHub 发布”，或“用 `toy-github` 检查并适配当前项目，保留原有部署流程”。安装版 Skill 已由独立实现代理完成一次新 Vite 项目的本地构建、预检及子路径访问测试；这不等于真人试用或平台提审。Skill 会处理常规代码与工作流修改；涉及后端迁移、登录替换或存储重做时会先说明影响，待你决定。它不能代替你的 Toy 发布资格和真实页面验收。[Skill 入口](skills/toy-github/SKILL.md) · [本人试用指南](docs/verification/user-trial.md)
+可对编程助手说：“用 `toy-github` 在空目录创建一个 Vite Toy 项目并接入 GitHub 发布”，或“用 `toy-github` 检查并适配当前项目，保留原有部署流程”。公开版 Skill 已通过 README 提示词的新建游戏、真实已有项目两次独立代理试用，均完成 GitHub 推送、真实预览和提审；这属于代理验证。Skill 会处理常规代码与工作流修改；涉及后端迁移、登录替换或存储重做时会先说明影响，待你决定。它不能代替你的 Toy 发布资格和真实页面验收。[Skill 入口](skills/toy-github/SKILL.md) · [独立试用指南](docs/verification/user-trial.md)
 
 ## 更新版本
 
@@ -100,7 +102,7 @@ python3 -m unittest discover -s tests -v
 
 Connect a static GitHub web project to Bilibili Toy with an Action, HTML and Vite starters, React/Vue examples, and a `toy-github` onboarding skill. The Action wraps the official `toy` CLI. “Submitted for review” means Bilibili accepted the request; it does not mean the version is live.
 
-The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3). Earlier public versions completed preview, first submission, and an update in separate new Vite and adapted React repositories. The human trial is pending; see the [acceptance record](docs/verification/acceptance.md).
+The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins [`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3). Two agents without implementation conversation history used only the prompt below and their assigned scenarios to build a new block game and adapt the real `muzzle-device-lab` project. Both completed live previews and submitted the same packages for review; see the [acceptance record](docs/verification/acceptance.md).
 
 ### Copy into your coding agent
 
@@ -135,6 +137,8 @@ Never describe “submitted for review” as “live.”
 | New Toy site | [Start a new project](docs/quickstart-new.md) | Minimal HTML or Vite site, config, and workflow |
 | Existing frontend | [Adapt an existing project](docs/quickstart-existing.md) | Toy-compatible paths and a publishing workflow without replacing the application |
 
+**First-time setup limitation:** another Toy in the same account can temporarily block automatic slug resolution while its review is pending and its listing has no URL. Wait for a verifiable listing, then preview the same commit again. This occurred and recovered during the independent trial. See [troubleshooting](docs/troubleshooting.md).
+
 Download the `v0.1.0-beta.3` source archive and run this from its extracted directory:
 
 ```bash
@@ -166,7 +170,7 @@ The following Codex installation command has been tested against the public repo
 npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” An independent implementation agent built and checked a new Vite starter using the installed skill; the separate human trial is pending. The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md) · [Human trial guide](docs/verification/user-trial.md)
+Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” The published skill completed both prompt-only agent trials: a new game and a real existing project, including GitHub push, live preview, and review submission. These were agent trials. The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md) · [Independent trial guide](docs/verification/user-trial.md)
 
 ### Updating
 

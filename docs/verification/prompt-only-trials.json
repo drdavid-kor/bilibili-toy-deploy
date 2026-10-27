@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-28",
+  "method": {
+    "performed_by": "two independent AI sub-agents; no human usability claim",
+    "inherited_implementation_conversation": false,
+    "initial_input": "Exact Chinese README Copy-Paste Prompt plus the requested project scenario, workspace and explicit GitHub/Toy permissions.",
+    "later_parent_messages": "Evidence/report format and status requests; parent acknowledged the recovery plan the agent found in public docs and required preserving the first failure separately. No implementation, credentials or CLI location supplied.",
+    "readme_commit": "5bd811915ac2aa15fd98cc4d31f5d990e474d07e",
+    "prompt_sha256": "9d34931d7e69585da3b5c6e75252b3e3ec116e7c5263bfd716328bcfd599f4a0",
+    "prompt": "请把我正在处理的网页项目接入哔哩哔哩 Toy；如果当前目录是空的，就从最小可运行项目开始。\n先阅读当前工作区和 AGENTS.md、现有构建与部署方式，\n再查看 https://github.com/drdavid-kor/bilibili-toy-deploy 的最新已发布测试版文档和 toy-github Skill。\n可用时优先使用 Skill，否则按同版本指南执行。\n已有纯 HTML 或 Vite（含 React/Vue）项目请做最小适配，保留原有功能、未提交改动和部署流程；\n空目录则建立模板，业务方向不明确时只问完成项目所必需的问题。\n填写真实构建命令与输出目录，修好 Toy 子路径下的资源和路由，\n准备封面、图标、toy.config.json 与同版本 GitHub 工作流。\n先完成本地构建、静态预检和必要的页面检查；在你有权限时，连接我自己的 GitHub 仓库、\n推送主分支，打开并核验真实 Toy 预览。\n登录只在本机用官方 toy login，并用发行版的 set_secret.py 写入 GitHub Secret；\n缺少账号或权限时告诉我具体操作，不索要或输出令牌。\n只有在我明确要求提交审核时，才为已预览的同一提交发布普通 GitHub Release 并复用那份预览包；\n缺包时先补预览，手动 override 只能经我明确指定，不能暗中提审。\n若必须重做后端、登录或存储，先说明影响并等我决定。\n最后交付改了什么、验证结果和运行链接、以后如何更新、实际阻碍；\n“已提交审核”不能写成“已上线”。",
+    "acceptance_revision": "User explicitly replaced the human trial requirement with these two sub-agent trials."
+  },
+  "published_action": {
+    "version": "v0.1.0-beta.3",
+    "commit": "340331a58a6007dbb78628932600d3ecc37be276"
+  },
+  "existing_project": {
+    "repository": "https://github.com/drdavid-kor/muzzle-device-lab",
+    "private": true,
+    "baseline": "4d2ac5198a0f1fb623525dc1fb4470b6ad8ca7cf",
+    "commit": "215cb286a58a3af74e836006edb089d722a58032",
+    "changes": [
+      ".github/workflows/toy.yml",
+      "README.md",
+      "toy.config.json",
+      "toy-assets/poster.png",
+      "toy-assets/icon.png"
+    ],
+    "preserved": "Application source, build.mjs, server.mjs, package.json, package-lock.json and wrangler.jsonc unchanged; root reviewer verified the diff.",
+    "local_checks": [
+      "npm build passed",
+      "static doctor: 0 warnings",
+      "desktop: 3D, device switching and cutaway"
+    ],
+    "hosted_browser_checks": [
+      "3D rendered",
+      "device switching",
+      "exploded view",
+      "comparison table"
+    ],
+    "preview_run": 40556055650,
+    "preview_artifact": 12757451650,
+    "preview_deployment": 7366381759,
+    "release": "toy-onboarding-2026-10-28",
+    "release_id": 425811608,
+    "release_run": 40556335437,
+    "submission_deployment": 7366417507,
+    "binding_deployment": 7366418818,
+    "package_sha256": "9b23338060ca11631e7b8f628fd6d853b81dab3c7979f14a71c529b6c250e7d9",
+    "result": "submitted for review; release build skipped; same commit, artifact and package; override=false",
+    "toy_id": 48681562671104,
+    "platform_observation": {
+      "at": "2026-10-28T02:04:58+08:00",
+      "status": "auditing",
+      "url_present": false
+    },
+    "authentication": "Existing official local Toy login reused; release set_secret.py safely configured Actions Secret. No fresh interactive login was required or claimed.",
+    "friction": [],
+    "limits": [
+      "Private run logs may be inaccessible to external readers.",
+      "Hosted phone viewport not separately checked in this trial.",
+      "No claim of final publication or unchanged Cloudflare runtime; configuration/source diff was checked."
+    ]
+  },
+  "new_project": {
+    "repository": "https://github.com/drdavid-kor/bilibili-toy-blockfall",
+    "private": false,
+    "initial_preview_run": 40556350697,
+    "initial_result": "build and precheck succeeded; publish stopped before upload because another Toy in this account lacked a verifiable URL/slug while auditing.",
+    "status": "passed after documented recovery; submitted for review; release build skipped; same commit/artifact/package; override=false",
+    "commit": "06b4aa707636950e0d26866a2f5202b2b451f45c",
+    "slug": "blockfall-drdavid",
+    "local_checks": [
+      "JavaScript syntax passed",
+      "Static precheck passed; unhashed JS/CSS filename warning only",
+      "Desktop and 375px phone layout",
+      "Start, hard drop, hold, touch rotation, pause/resume, scoring"
+    ],
+    "separate_local_cli_preview": "Created and played while Action was blocked; not counted as an Action preview or review submission.",
+    "recovery": "After the other Toy acquired a verifiable URL, agent manually previewed the original commit with the same public beta.3 workflow.",
+    "preview_run": 40556644747,
+    "preview_artifact": 12756359669,
+    "preview_deployment": 7366465786,
+    "hosted_browser_checks": [
+      "Start",
+      "touch hard drop and score=40",
+      "hold",
+      "pause",
+      "no observed script errors"
+    ],
+    "release": "v0.1.0",
+    "release_id": 425815540,
+    "release_run": 40556951838,
+    "submission_deployment": 7366506683,
+    "binding_deployment": 7366507944,
+    "package_sha256": "5dffb9b296608258e337d07773a86078b6811e2b6161ea73c880c09bb0892f2b",
+    "toy_id": 48682535749632,
+    "authentication": "Existing official local session verified and safely transferred with release set_secret.py; fresh interactive login not claimed.",
+    "friction": [
+      "A different pending Toy without a URL temporarily blocked automatic slug resolution in this new repository."
+    ],
+    "limits": [
+      "The initial failed Action run remains failed; later success was a separate manual preview run."
+    ]
+  },
+  "follow_up": {
+    "documentation": "Added the cross-project pending-URL limitation and safe retry path to troubleshooting and both quickstarts.",
+    "runtime_changes": "None."
+  },
+  "reviewer_verification": {
+    "github": "Both successful preview/release pairs, matching source SHAs and package hashes, release build skipped, override=false, binding records and repository visibility independently rechecked.",
+    "platform_observed_at": "2026-10-27T18:08:39.419925+00:00",
+    "platform_items": [
+      {
+        "toy_id": 48682535749632,
+        "status": "published",
+        "url": "https://www.bilibili.com/toy/blockfall-drdavid/index.html"
+      },
+      {
+        "toy_id": 48681562671104,
+        "status": "published",
+        "url": "https://www.bilibili.com/toy/muzzle-device-lab/index.html"
+      }
+    ],
+    "scope": "This later read-only CLI observation is separate from the agents' earlier auditing observations; Action success itself still means submission acceptance.",
+    "published_browser_check": "Both official URLs opened in the browser after publication. Blockfall start screen and controls rendered; Muzzle Lab displayed its 3D model and teaching interface. Agent interaction checks remain recorded separately."
+  }
+}

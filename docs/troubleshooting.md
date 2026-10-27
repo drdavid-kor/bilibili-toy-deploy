@@ -11,6 +11,7 @@
 | 预览上传前因 GitHub 记录权限失败 | 工作流 `deployments: write` 权限及仓库 Actions 设置 | 修正权限后再预览；预览未上传，不能把这次运行当成有效预览 |
 | 未找到 Release 对应预览包 | tag 指向的 SHA、产物保留期和预览运行是否成功 | 为该提交重新预览；必要时使用明确标记的手动覆盖 |
 | 同名 slug 有多个匹配或查询失败 | 当前账号、slug 与 CLI 返回的完整列表 | 先核对目标，必要时显式填写 Toy ID；不要直接重试创建 |
+| 新仓库报 `A Toy has no verifiable slug yet, possibly while auditing`，即使正在审核的是另一件作品 | 同一 B 站账号中任一作品暂缺 URL 时，新仓库没有可信关联，无法证明该项不占用目标 slug | 等官方列表能核验该作品 URL 后，再重跑原提交的预览。此失败发生在上传前，不能直接发布 Release 代替预览；不要改 slug、手工伪造绑定或用 override 绕过目标核对。多个新仓库同时接入同一账号可能遇到此限制 |
 | `v0.1.0-beta.1` 在刚创建的 Toy 审核期间报 `Toy listing contains unverifiable ownership or slug` | 平台列表项可能已有正确归属，却暂时没有可核对 slug 的 URL；[首次失败运行](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/1)在预览前停止，没有发送 Toy 写请求 | 先到 B 站确认目标 Toy 与审核状态；待列表出现可核对的 URL 后，可重跑原预览（[同一运行第 2 次尝试已成功](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/2)）。也可升级到修复版 `v0.1.0-beta.2` 后重新预览。不要改 slug 或直接发布 Release 来绕过核对 |
 | 会话过期或身份不符 | GitHub Secret 和预期 B 站账号 | 按[认证说明](authentication.md)更新会话后重试；不要粘贴会话到 Issue 或聊天 |
 | 提审被平台明确拒绝 | CLI 返回的业务原因、元信息和内容 | 修复原因后重新触发；此前提审仍有记录 |

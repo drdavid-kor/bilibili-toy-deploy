@@ -4,11 +4,26 @@
 
 ## 当前结论
 
-[`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3) 已公开发布：新增安全操作摘要、预览上传前的 GitHub 记录权限检查和有限只读重试。55 个本地测试、该提交的 CI 与本仓库托管预览成功；私有 React 仓库用该标签完成同一包的预览和更新提审。无实现上下文的独立代理仅凭公开文档，在私有仓库完成纯 HTML 首次创建和第二次更新。此前公开版本也已在新建 Vite 与已有 React 仓库验证对应路径。独立人类试用仍待反馈。“已提交审核”不等于新版已上线。
+[`v0.1.0-beta.3`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.3) 已公开发布：新增安全操作摘要、预览上传前的 GitHub 记录权限检查和有限只读重试。55 个本地测试、该提交的 CI 与本仓库托管预览成功；私有 React 仓库用该标签完成同一包的预览和更新提审。无实现上下文的独立代理仅凭公开文档，在私有仓库完成纯 HTML 首次创建和第二次更新。此前公开版本也已在新建 Vite 与已有 React 仓库验证对应路径。按用户修订后的验收要求，两个不继承实现对话的 sub-agent 仅凭 README 提示词和指定场景，完成新建俄罗斯方块与真实已有项目 `muzzle-device-lab` 的真实预览、同包 Release 提审。[试用快照](prompt-only-trials.json)保留新游戏首次遇阻及恢复过程；这属于代理验证，不称为人类试用。“已提交审核”不等于新版已上线。
 
-旧版内容更新运行曾因 CLI 成功响应不含 ID 而在 Action 中失败；平台实际接受了更新，页面显示 Revision 2，前后元信息快照相同。随后用 `resolve-unknown` 核实并恢复 Deployment，未重复发送 Toy 写请求。修复后的普通 Release 更新已在托管 Runner 成功。外部仓库故意换入无效 Secret 后，手动预览明确失败且没有提审；重新设置有效 Secret 后，后续预览和 Release 更新均成功。公开 Skill 的安装命令已重复运行并成功覆盖同源安装；独立代理按安装版完成新 Vite 项目的本地检查。用户本人已表示愿意试用，**仍待实际反馈**。会话实际寿命以及本地登出是否撤销旧会话尚无结论。
+旧版内容更新运行曾因 CLI 成功响应不含 ID 而在 Action 中失败；平台实际接受了更新，页面显示 Revision 2，前后元信息快照相同。随后用 `resolve-unknown` 核实并恢复 Deployment，未重复发送 Toy 写请求。修复后的普通 Release 更新已在托管 Runner 成功。外部仓库故意换入无效 Secret 后，手动预览明确失败且没有提审；重新设置有效 Secret 后，后续预览和 Release 更新均成功。公开 Skill 的安装命令已重复运行并成功覆盖同源安装；独立代理按安装版完成新 Vite 项目的本地检查。2026-10-28 用户明确以两个独立 sub-agent 试用替代本人试用，修订后的要求已完成。会话实际寿命以及本地登出是否撤销旧会话尚无结论。
 
 已发布的 beta.1 在刚创建的 Toy 仍在审核、平台列表暂缺 URL 时会安全停止预览；同一运行在列表出现 URL 后重跑成功。beta.2 已加入用可信绑定识别该作品的修复，通过本地回归、CI 与外部 React 项目的后续更新；**审核中列表再次缺 URL 的真实场景尚未重现验证**。beta.1 标签保持不变。
+
+## Copy-Paste Prompt 独立代理试用
+
+按用户指定，两个 sub-agent 均以不继承实现对话的方式启动，只收到 README 中文提示词、场景和相应 GitHub/Toy 操作授权。它们自行从公开 beta.3 读取 Skill、指南和工作流；提示词原文及摘要保存在[脱敏试用快照](prompt-only-trials.json)。维护者随后核对运行、提交、包摘要和仓库变更。
+
+| 场景 | 结果与证据 |
+| --- | --- |
+| 新建俄罗斯方块 | [公开游戏仓库](https://github.com/drdavid-kor/bilibili-toy-blockfall)，提交 `06b4aa707636950e0d26866a2f5202b2b451f45c`；[预览 40556644747](https://github.com/drdavid-kor/bilibili-toy-blockfall/actions/runs/40556644747)和[提审 40556951838](https://github.com/drdavid-kor/bilibili-toy-blockfall/actions/runs/40556951838)成功。游戏的开始、直落得分、暂存、触屏与暂停已检查；本地 375 px 无横向溢出。Release `v0.1.0` 跳过重建，复用 Artifact `12756359669`，包摘要 `5dffb9b296608258e337d07773a86078b6811e2b6161ea73c880c09bb0892f2b`；Toy ID `48682535749632`，`override=false` |
+| 适配已有 muzzle-device-lab | [原私有仓库](https://github.com/drdavid-kor/muzzle-device-lab)，提交 `215cb286a58a3af74e836006edb089d722a58032`；仅增加 Toy 工作流、配置、素材及 README，原应用源码、构建和 Cloudflare 配置未变。[预览 40556055650](https://github.com/drdavid-kor/muzzle-device-lab/actions/runs/40556055650)和[提审 40556335437](https://github.com/drdavid-kor/muzzle-device-lab/actions/runs/40556335437)成功，真实页面的 3D、装置切换、分解视图和对比表正常。Release 跳过重建，复用 Artifact `12757451650`，包摘要 `9b23338060ca11631e7b8f628fd6d853b81dab3c7979f14a71c529b6c250e7d9`；Toy ID `48681562671104`，`override=false`。私有运行日志可能无法由外部读者打开 |
+
+实际卡点：[游戏首次 push 运行 40556350697](https://github.com/drdavid-kor/bilibili-toy-blockfall/actions/runs/40556350697)构建成功，但另一条试用刚提交的 Toy 正在审核、列表缺 URL，导致新仓库不能完整核验 slug，Action 在上传前停止。代理从公开故障排查获知这一限制；等列表出现 URL 后，为原提交手动生成 Action 预览，再发布 Release。中途另做的本机 CLI 预览不算 Action 验收。此卡点的跨项目影响及恢复方式已补入两条上手指南、README 和故障排查；未修改运行逻辑或绕过核对。
+
+两条提审最初均返回 `auditing`。维护者于 **2026-10-27 18:08:39 UTC** 另行通过官方 CLI 查询，两个 Toy 均为 `published`，并返回[游戏正式地址](https://www.bilibili.com/toy/blockfall-drdavid/index.html)和[已有项目正式地址](https://www.bilibili.com/toy/muzzle-device-lab/index.html)。随后在浏览器打开两条正式地址，游戏首页及三维模型页面均可见。这是后续平台状态与页面证据，不改变 Action 仅以“接受提审”为成功边界的规则。
+
+两次均复用本机已有官方登录态，通过随版脚本安全设置 Secret；未声称重新走过交互登录，也未进行人类使用研究。已有项目本次没有单独检查托管手机视口；原项目的手机测试记录不能替代这次实测。
 
 ## 关键运行与产物
 
@@ -63,7 +78,7 @@ beta.3 的 React 回归复用该作品同一包摘要 `b9104cf18fb7cfecf89ae7688
 
 | 门槛 | 状态 | 当前证据与尚缺内容 |
 | --- | --- | --- |
-| G1 托管 Runner 认证 | 部分通过 | P0、独立托管预览与提交运行均成功；外部私有仓库也使用公开标签完成预览和首次提审。[同一 Secret 跨时间观察](session-observation.json)的两次成功运行开始相隔 82 分 18 秒。普通用户按文档独立配置仍待本人试用，固定会话寿命不作推断。 |
+| G1 托管 Runner 认证 | 通过 | P0、独立托管预览与提交运行均成功；外部私有仓库也使用公开标签完成预览和首次提审。[同一 Secret 跨时间观察](session-observation.json)的两次成功运行开始相隔 82 分 18 秒。两次[提示词独立代理试用](prompt-only-trials.json)均自行用公开版 `set_secret.py` 设置 Secret，并完成托管预览及提审，符合修订后的验收方式。两者复用现成本机登录态，未重新测试交互登录；固定会话寿命不作推断。 |
 | G2 失效与更新会话 | 通过 | `scripts/set_secret.py` 的安全传输有本地测试；外部仓库故意设置无效 Secret 后，托管预览明确报会话失效且未提审。重新设置有效 Secret 后，新提交预览及 Release 更新成功。自然过期时间与本地登出是否撤销旧会话仍未知，不作保证。 |
 | G3 CLI 创建、预览、更新和接管 | 通过 | 真实预览、创建、内容更新及已有 React 项目的 beta.2、beta.3 更新成功；无 ID、无关联的隔离仓库已按唯一 slug [自动接管原 Toy](slug-adoption.json)，未重复创建。分页、归属验证与冲突停止有本地测试；审核中缺 URL 的可信绑定处理通过回归。**该特定平台形状在修复后尚未真实重现**，不将此额外场景说成已实测。 |
 | G4 元信息保持 | 通过 | 真实内容更新的[前后快照](metadata-retention.json)显示标题、分类、可见性、封面和图标相同；已有 React 项目的单字段[手动同步](metadata-sync.json)只改变标题，分类、可见性、主题、水印和封面/图标 URL 摘要均保持。此项证明原计划的常规保留与选中字段同步；该同步前目标为 `published`，未验证审核中同步。 |
@@ -76,9 +91,9 @@ CLI 版本与响应形状的来源见[上游契约记录](upstream-contract.md)�
 
 ## 两条上手路径
 
-| 路径 | 已验证 | 尚需完成 |
+| 路径 | 已验证 | 本次独立提示词试用 |
 | --- | --- | --- |
-| 新建项目 | HTML、Vite 脚手架可生成配置、封面、图标和工作流；[纯 HTML 文档独立代理试用](html-document-trial.json)完成两次预览、首次创建与同一 Toy 更新；公开安装版 Skill 经独立代理完成 Vite 构建、预检与子路径 HTTP 200，外部 Vite 仓库也完成预览、创建及更新提审 | [本人按文档独立试用](user-trial.md)及反馈；不把代理运行当成人类上手验收 |
-| 已有项目 | [独立代理隔离测试](skill-forward-test.md)将合成的现有 Vite React 项目适配 Toy，保留原工作流；私有 React 仓库已用 beta.1 首次提审、beta.2 与 beta.3 更新提审；Vue 示例完成隔离构建、资源与浏览器交互检查；安装版 Skill 的架构迁移停下行为由独立代理验证 | [本人按文档独立试用](user-trial.md)及反馈；审核中缺 URL 的修复仍缺同场景真实重测 |
+| 新建项目 | HTML、Vite 脚手架可生成配置、封面、图标和工作流；[纯 HTML 文档独立代理试用](html-document-trial.json)完成两次预览、首次创建与同一 Toy 更新；公开安装版 Skill 经独立代理完成 Vite 构建、预检与子路径 HTTP 200，外部 Vite 仓库也完成预览、创建及更新提审 | [俄罗斯方块试用](prompt-only-trials.json)通过：独立公开仓库、可玩游戏、真实 Action 预览、同提交同包提审；曾因另一作品暂缺 URL 停止，按文档恢复。属于用户指定的代理验收 |
+| 已有项目 | [独立代理隔离测试](skill-forward-test.md)将合成的现有 Vite React 项目适配 Toy，保留原工作流；私有 React 仓库已用 beta.1 首次提审、beta.2 与 beta.3 更新提审；Vue 示例完成隔离构建、资源与浏览器交互检查；安装版 Skill 的架构迁移停下行为由独立代理验证 | [muzzle-device-lab 试用](prompt-only-trials.json)通过：真实既有私有仓库、原应用及 Cloudflare 配置不变、真实预览和同包提审。可信绑定目标本身缺 URL 的修复仍缺同场景真实重测 |
 
-记录更新原则：每新增一项真实平台或公开发行验证，补充对应运行、提交和观察结果，再提升表中状态。独立代理测试与独立人类试用保持分开记录；不以当前 CI 绿灯代替第一版全部验收。
+记录更新原则：每新增一项真实平台或公开发行验证，补充对应运行、提交和观察结果，再提升表中状态。按用户于 2026-10-28 修订的方式，以两条独立代理试用完成上手验收；保留执行者与证据边界，不以 CI 绿灯代替真实路径。

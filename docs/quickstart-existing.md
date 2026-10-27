@@ -18,6 +18,8 @@ Toy 页面位于 `/toy/<slug>/`。检查首页 HTML 中的脚本、样式、图�
 
 ## 3 指定目标 Toy
 
+若同一 B 站账号有作品正在审核且列表暂缺其 URL，没有可信关联的新仓库会暂停自动创建或接管；即使该作品属于另一个项目也会影响首次接入。等列表可核验后重跑预览，见[故障排查](troubleshooting.md)。
+
 在 `toy.config.json` 填写本项目的 slug、输出目录和首次创建所需的标题等信息；凭据不写在这个文件里。若此仓库要首次创建 Toy，请同时填写 `create.poster`、`create.icon`，并把对应图片放在项目仓库里。可以先从同版本 `templates/html/toy-assets/` 复制已配置的占位封面与图标，之后换成自己的图片；不必在首次配置前自行制作。现有作品接管后，普通内容更新会保留 B 站上的封面与图标。已有 Toy 可以显式填写 ID。未填 ID 时，Action 会核对当前登录账号并按 slug 完整查询：唯一匹配就接管，零匹配才可能创建。slug 相同意味着本仓库后续会更新那个 Toy，接入前请确认对象正确。[配置说明](configuration.md)
 
 先在本机完成官方 `toy login` 和 `gh auth login`。在下载并解压的同版本项目目录运行 `python3 scripts/set_secret.py --repo OWNER/REPOSITORY`，把示例仓库名换成自己的。工具将会话设置为 GitHub Actions Secret `TOY_SESSION_TOKEN`，不应打印会话值。前提与更新方法见[认证说明](authentication.md)。示例工作流会向临时 `GITHUB_TOKEN` 申请部署记录写权限。会话只注入发布步骤，不注入安装依赖或构建步骤，也不注入 PR 工作流。
@@ -46,6 +48,6 @@ Codex 用户可运行已验证的安装命令：
 npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-然后向编程助手提出：“检查并适配当前 Vite 项目，让它在 Toy 子路径运行，接入发布 Action，保留现有部署流程。”Skill 会检查路由、资源路径和构建产物，直接完成通常的代码修改与工作流接入。若必须迁移后端、替换登录或重做存储，它会说明影响并等待你决定。改造后仍需验证真实页面和工作流结果。本人试用可按[简短试用指南](verification/user-trial.md)记录卡点。
+然后向编程助手提出：“检查并适配当前 Vite 项目，让它在 Toy 子路径运行，接入发布 Action，保留现有部署流程。”Skill 会检查路由、资源路径和构建产物，直接完成通常的代码修改与工作流接入。若必须迁移后端、替换登录或重做存储，它会说明影响并等待你决定。改造后仍需验证真实页面和工作流结果。独立上手时可按[简短试用指南](verification/user-trial.md)记录卡点。
 
 故障恢复见[故障排查](troubleshooting.md)。

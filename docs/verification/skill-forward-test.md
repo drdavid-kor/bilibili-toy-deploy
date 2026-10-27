@@ -26,7 +26,7 @@ The evaluator read `skills/toy-github/SKILL.md` and `references/existing-project
 | New workflow | References `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1` consistently |
 | Generated dependencies in initial copy | None |
 
-The work tested local adaptation and packaging only. It does not prove the remote Action tag exists, that GitHub-hosted authentication works, that a Toy preview loads in a browser, or that Bilibili accepts review submission. Those require the public installation and hosted-runner checks. The project plan's separate non-author **human** usability test is also still outstanding.
+The work tested local adaptation and packaging only. It does not prove the remote Action tag exists, that GitHub-hosted authentication works, that a Toy preview loads in a browser, or that Bilibili accepts review submission. Those require the public installation and hosted-runner checks. This historical local test did not include a human usability trial. On 2026-10-28, the user replaced that acceptance requirement with two independent prompt-only agent trials; see the current [acceptance record](acceptance.md).
 
 ## Scaffold follow-up
 
