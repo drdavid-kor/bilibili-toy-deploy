@@ -54,6 +54,9 @@ inputs:
     description: accepted or not-accepted, after checking the exact request on Bilibili
     default: ''
 outputs:
+  deployment-id:
+    description: Submission record ID for unknown-result recovery
+    value: ${{ steps.run.outputs.deployment-id }}
   status:
     description: checked, previewed, submitted, already-submitted, unknown or failed
     value: ${{ steps.run.outputs.status }}

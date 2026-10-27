@@ -122,7 +122,7 @@ class GitHub:
         self.token=token or os.environ.get('GH_TOKEN','')
         if not re.fullmatch(r'[\w.-]+/[\w.-]+',self.repo) or not self.token:raise Failure('GitHub repository and token are required')
     def call(self,path,data=None,method=None):
-        url='https://api.github.com/repos/'+self.repo+'/'+path
+        url='https://api.github.com/repos/'+self.repo+('/'+path if path else '')
         request=urllib.request.Request(url,data=canonical(data).encode() if data is not None else None,method=method,headers={'Authorization':'Bearer '+self.token,'Accept':'application/vnd.github+json','Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'})
         for attempt in range(3 if data is None and method is None else 1):
             try:
@@ -300,6 +300,8 @@ def write_operation(args):
         # Persist intent before launching the write. If runner dies afterwards, retry is blocked.
         rec=gh.record(sha,cfg['slug'],kind,key=key,account=account,toy_id=chosen['id'] if chosen else None,package_sha=fingerprint,release_id=args.release_id,override=args.override)
         gh.status(rec,'in_progress','Request about to be sent; an interrupted run requires reconciliation')
+        output('deployment-id',rec['id'])
+        summary('Submission record / 提交记录: Deployment `'+str(rec['id'])+'`. If interrupted, use resolve-unknown after checking Bilibili.')
         try:
             result=toy.call(argv,write=True)
             if not valid_int(result.get('id')) or not isinstance(result.get('status'),str):raise Unknown('Submission response lacks ID or status; check Bilibili before retrying.')

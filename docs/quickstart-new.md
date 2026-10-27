@@ -49,7 +49,7 @@ git push -u origin main
 
 ## 3 提交审核
 
-在 GitHub 仓库的 Releases 页选择“Draft a new release”，创建版本 tag，确认 tag 指向刚才预览的**同一提交**，再选择“Publish release”。发布 Release 才会触发提审；只推送 tag 不会。返回 Actions 页查看本次运行的目标 SHA、包摘要和平台响应。
+在 GitHub 仓库的 Releases 页选择“Draft a new release”，创建版本 tag，确认 tag 指向刚才预览的**同一提交**，再选择“Publish release”。第一版示例只接受已发布的正式 Release，不处理 prerelease。发布 Release 才会触发提审；只推送 tag 不会。返回 Actions 页查看本次运行的目标 SHA、包摘要和平台响应。
 
 默认提审复用该提交的已预览构建包。如果找不到有效包、包已过期或校验失败，工作流停止并提示为该提交重新生成预览。它不会悄悄构建主分支最新代码。你可以在手动工作流中明确选择目标 Release 并启用覆盖：此时重新构建 Release 对应提交、执行预检，再直接提审。覆盖动作和提交摘要会进入记录。
 

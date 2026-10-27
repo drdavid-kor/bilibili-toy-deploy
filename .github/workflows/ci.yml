@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python sources
+        run: python -m compileall -q scripts tests vendor/toy_doctor.py
+      - name: Run unit and contract tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate onboarding skill
+        run: python scripts/check_skill.py skills/toy-github
+      - name: Precheck plain HTML starter
+        run: python vendor/toy_doctor.py templates/html/site --slug ci-check --require-root-index --json
+
+  frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [templates/vite, examples/react, examples/vue]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - name: Install and build
+        working-directory: ${{ matrix.project }}
+        run: |
+          npm ci
+          npm run build
+      - name: Precheck static output
+        run: python3 vendor/toy_doctor.py '${{ matrix.project }}/dist' --slug ci-check --require-root-index --json
