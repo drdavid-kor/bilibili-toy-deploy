@@ -2,7 +2,29 @@
 
 把 GitHub 上的静态网页项目接入哔哩哔哩 Toy。这个仓库提供 GitHub Action、纯 HTML 与 Vite 起点、已有项目接入示例，以及帮助编程助手完成适配的 `toy-github` Skill。它调用 B 站官方 `toy` CLI；B 站接受提审后仍需等待平台审核。
 
-**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。示例工作流固定引用 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`。请先确认该标签已经公开发布；标签不存在时，示例不能在其他仓库运行。托管 Runner 的认证和真实 Toy 发布状态见[验收记录](docs/verification/acceptance.md)；不以源码存在代替验证。
+**测试版范围：**纯 HTML/CSS/JS 和 Vite（含 React、Vue），一个仓库对应一个 Toy。当前示例工作流固定引用 [`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)。外部仓库已用 beta.1 完成新建 Vite 路径；beta.2 和本人试用的状态见[验收记录](docs/verification/acceptance.md)。
+
+## 复制给编程助手
+
+```text
+请把我正在处理的网页项目接入哔哩哔哩 Toy；如果当前目录是空的，就从最小可运行项目开始。
+先阅读当前工作区和 AGENTS.md、现有构建与部署方式，
+再查看 https://github.com/drdavid-kor/bilibili-toy-deploy 的最新已发布测试版文档和 toy-github Skill。
+可用时优先使用 Skill，否则按同版本指南执行。
+已有纯 HTML 或 Vite（含 React/Vue）项目请做最小适配，保留原有功能、未提交改动和部署流程；
+空目录则建立模板，业务方向不明确时只问完成项目所必需的问题。
+填写真实构建命令与输出目录，修好 Toy 子路径下的资源和路由，
+准备封面、图标、toy.config.json 与同版本 GitHub 工作流。
+先完成本地构建、静态预检和必要的页面检查；在你有权限时，连接我自己的 GitHub 仓库、
+推送主分支，打开并核验真实 Toy 预览。
+登录只在本机用官方 toy login，并用发行版的 set_secret.py 写入 GitHub Secret；
+缺少账号或权限时告诉我具体操作，不索要或输出令牌。
+只有在我明确要求提交审核时，才为已预览的同一提交发布普通 GitHub Release 并复用那份预览包；
+缺包时先补预览，手动 override 只能经我明确指定，不能暗中提审。
+若必须重做后端、登录或存储，先说明影响并等我决定。
+最后交付改了什么、验证结果和运行链接、以后如何更新、实际阻碍；
+“已提交审核”不能写成“已上线”。
+```
 
 ## 选择上手路径
 
@@ -15,7 +37,7 @@
 
 ## 从零创建：最短路径
 
-先从 GitHub Releases 下载已发布的 `v0.1.0-beta.1` 源码并解压。在解压目录运行下面的命令，把目录、slug 和标题换成自己的；脚手架会复制与该版本匹配的工作流：
+先从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载源码并解压。在解压目录运行下面的命令，把目录、slug 和标题换成自己的；脚手架会复制与该版本匹配的工作流：
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
@@ -48,13 +70,13 @@ Vite 项目把 `html` 改为 `vite`。两个起点都自带 `toy-assets/poster.p
 
 ## 用 Skill 接入
 
-公开仓库及标签可访问后，使用以下命令安装；首次公开发布时还需验证目标编程助手能发现该 Skill：
+以下命令已在 Codex 上完成公开安装验证：
 
 ```bash
-npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github
+npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-可对编程助手说：“用 `toy-github` 在空目录创建一个 Vite Toy 项目并接入 GitHub 发布”，或“用 `toy-github` 检查并适配当前项目，保留原有部署流程”。Skill 会处理常规代码与工作流修改；涉及后端迁移、登录替换或存储重做时会先说明影响，待你决定。它不能代替你的 Toy 发布资格和真实页面验收。[Skill 入口](skills/toy-github/SKILL.md)
+可对编程助手说：“用 `toy-github` 在空目录创建一个 Vite Toy 项目并接入 GitHub 发布”，或“用 `toy-github` 检查并适配当前项目，保留原有部署流程”。安装版 Skill 已由独立实现代理完成一次新 Vite 项目的本地构建、预检及子路径访问测试；这不等于真人试用或平台提审。Skill 会处理常规代码与工作流修改；涉及后端迁移、登录替换或存储重做时会先说明影响，待你决定。它不能代替你的 Toy 发布资格和真实页面验收。[Skill 入口](skills/toy-github/SKILL.md) · [本人试用指南](docs/verification/user-trial.md)
 
 ## 开发与来源
 
@@ -70,7 +92,33 @@ python3 -m unittest discover -s tests -v
 
 Connect a static GitHub web project to Bilibili Toy with an Action, HTML and Vite starters, React/Vue examples, and a `toy-github` onboarding skill. The Action wraps the official `toy` CLI. “Submitted for review” means Bilibili accepted the request; it does not mean the version is live.
 
-The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The example workflow pins `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`. **Check that this tag is publicly available before using the example in another repository.** See the [acceptance record](docs/verification/acceptance.md) for current hosted-runner and live Toy evidence; source code alone does not establish acceptance.
+The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, with one Toy per repository. The current example workflow pins [`v0.1.0-beta.2`](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2). A separate repository completed the new Vite path with beta.1; see the [acceptance record](docs/verification/acceptance.md) for beta.2 and the pending human trial.
+
+### Copy into your coding agent
+
+```text
+Connect the web project I am working on to Bilibili Toy; if this directory is empty,
+start from a minimal working project. First inspect the workspace, AGENTS.md,
+and existing build and deployment setup. Then read the latest published beta
+documentation and toy-github skill at https://github.com/drdavid-kor/bilibili-toy-deploy.
+Use the skill when available; otherwise follow the matching release guide.
+For an existing plain HTML or Vite project (including React/Vue), make the smallest
+practical changes and preserve its features, uncommitted work, and other deployments.
+For an empty directory, scaffold the starter and ask only for essential missing product details.
+Set the real build command and output directory, fix assets and routing under the Toy subpath,
+and prepare poster/icon artwork, toy.config.json, and the workflow from the same release.
+Build, run the static precheck, and inspect the relevant pages locally. If you have permission,
+connect my own GitHub repository, push the default branch, and open and verify a real Toy preview.
+Authenticate only through the official toy login on my computer and use the release's
+set_secret.py to set the GitHub Secret. If account access or permissions are missing,
+give me the exact steps without asking for or printing tokens.
+Submit for review only when I explicitly ask: publish a normal GitHub Release for the same
+previewed commit and reuse that preview package. If the package is missing, preview that commit first.
+Use manual override only when I explicitly request it; never submit silently.
+If backend, login, or storage must be redesigned, explain the impact and wait for my decision.
+Finish with the changes made, verification and run links, how I update later, and any real blocker.
+Never describe “submitted for review” as “live.”
+```
 
 ### Choose a path
 
@@ -79,7 +127,7 @@ The beta supports plain HTML/CSS/JavaScript and Vite, including React and Vue, w
 | New Toy site | [Start a new project](docs/quickstart-new.md) | Minimal HTML or Vite site, config, and workflow |
 | Existing frontend | [Adapt an existing project](docs/quickstart-existing.md) | Toy-compatible paths and a publishing workflow without replacing the application |
 
-For a new site, download the published `v0.1.0-beta.1` source archive and run this from its extracted directory:
+For a new site, download the `v0.1.0-beta.2` source archive and run this from its extracted directory:
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
@@ -89,16 +137,25 @@ Choose `--template vite` for a Vite starter. Both starters include placeholder `
 
 Push the new project's default branch and inspect the Actions preview. Publish a GitHub Release pointing to **that same commit** to submit the previewed package for review. A tag push alone does not submit. For an existing site, copy the matching `examples/workflows/toy.yml`, set an explicit build command and output directory in `toy.config.json`, and follow the [adaptation guide](docs/quickstart-existing.md). If that site will create a new Toy, also provide `create.poster` and `create.icon`, for example by copying the starter artwork and then replacing it. The Action does not auto-detect a build system.
 
-PRs only build and check. Default-branch pushes generate previews. Published Releases reuse the matching preview artifact and submit it. Manual operations are `preview`, `submit`, `override`, `sync-metadata`, and `resolve-unknown`. An override rebuilds the selected Release commit and submits directly after precheck. Unknown write outcomes require inspection on Bilibili before manual reconciliation; they are never retried automatically. See [configuration](docs/configuration.md) and [troubleshooting](docs/troubleshooting.md).
+| Event | Action |
+| --- | --- |
+| Pull request | Build and static checks; no Toy upload or session secret |
+| Default-branch push | Build, precheck, and Toy preview |
+| Published, non-prerelease GitHub Release | Reuse that commit's preview package and submit it for review |
+| Manual `preview` / `submit` | Preview a selected commit / submit a selected published Release |
+| Manual `override` | Rebuild and precheck the selected Release commit, then submit directly |
+| Manual `sync-metadata` / `resolve-unknown` | Submit explicit metadata fields / record a verified uncertain result without another Toy write |
+
+Unknown write outcomes require inspection on Bilibili before manual reconciliation; they are never retried automatically. See [configuration](docs/configuration.md) and [troubleshooting](docs/troubleshooting.md).
 
 The Action's `expose-preview` input defaults to `false` and withholds the preview URL. The example workflow explicitly sets it to `true` for a clickable job-summary link. In a public repository, readers may obtain that link and the site package from workflow artifacts. Do not include secrets or unshared material in the package.
 
-After the public release and installation check, install the onboarding skill with:
+The following Codex installation command has been tested against the public repository:
 
 ```bash
-npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github
+npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
 ```
 
-Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md)
+Ask your coding assistant to “use `toy-github` to create a Vite Toy project and connect the GitHub Action” or “adapt this existing frontend for Toy while keeping its other deployment.” An independent implementation agent built and checked a new Vite starter using the installed skill; the separate human trial is pending. The skill can make ordinary code and workflow changes. It pauses for your decision when backend, login, or storage behavior must change. [Skill entrypoint](skills/toy-github/SKILL.md) · [Human trial guide](docs/verification/user-trial.md)
 
 Run local tests with `python3 -m unittest discover -s tests -v`. The [plan](docs/development-plan.md), [acceptance record](docs/verification/acceptance.md), [CLI contract record](docs/verification/upstream-contract.md), and [MIT license](LICENSE) provide implementation context.

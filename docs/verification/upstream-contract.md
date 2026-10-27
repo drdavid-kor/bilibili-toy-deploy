@@ -31,6 +31,12 @@ For `--json`, the official [DSH fake CLI](https://github.com/bilibili/toy/blob/a
 
 The official [DSH argv builder](https://github.com/bilibili/toy/blob/ae156ecb3391dfb22bdd93d45d6b0067e1e5b723/dsh/packages/toy/src/argv.js) only adds update metadata flags when explicitly supplied. A live content update of the test Toy retained its title, category, visibility, poster URL and icon URL in the [before/after snapshot](metadata-retention.json); this is evidence for that Toy and update, not a universal guarantee for future platform versions. The v0.6.4 help lists category choices `GAME`, `INTERACTIVE_PLAY`, `TOOL`, `TEST`, `GUIDE`, `COLLECTION`, `OTHER` and visibility choices `link-only`, `password`, `public`. The `update` command does not expose `--slug`.
 
+### Newly submitted Toy without a URL
+
+On 2026-10-28, a newly created test Toy returned an `auditing` list entry with keys `category, ctime, id, mtime, status, title, user_info, visibility`, but **no `url` or `slug`**. Its `user_info.mid` matched the authenticated account. Once published, the same ID acquired a URL. This caused the beta.1 parser to stop the next preview before any Toy write ([failed attempt](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/1)); retrying after the URL appeared succeeded.
+
+Beta.2 retains such an entry with an unknown slug. An existing association can still identify it by the stored account and Toy ID, provided no other ID has the configured slug. A returned URL that conflicts with the association still stops the operation. Without an association, an unknown slug prevents automatic creation or adoption; an explicit ID must have a verifiable matching URL. Recovery of an uncertain first creation without a stored ID waits for verifiable list data and never treats a missing URL as evidence that the submission was rejected. Regression tests use synthetic IDs and account values with this observed field shape.
+
 The CLI strips the upstream `{code,message,data}` envelope on successful JSON calls; do not expect an outer `data` member. For failed calls, the official [error reference](https://github.com/bilibili/toy/blob/ae156ecb3391dfb22bdd93d45d6b0067e1e5b723/skills/toy/references/error-codes.md) distinguishes session expiry (`307001`, `307029`), business errors (`status=<n> code=<n> message=...`), usage errors, and ambiguous network failures. A write call that times out or returns invalid output after launch is an unknown result, not proof that nothing was submitted.
 
 ## Doctor invocation

@@ -10,10 +10,13 @@
 | Toy 页面白屏或 404 | 构建产物内的 `/` 根路径、Vite base、路由刷新和文件名大小写 | 修正项目并重新预览；不能只凭上传成功判定页面正常 |
 | 未找到 Release 对应预览包 | tag 指向的 SHA、产物保留期和预览运行是否成功 | 为该提交重新预览；必要时使用明确标记的手动覆盖 |
 | 同名 slug 有多个匹配或查询失败 | 当前账号、slug 与 CLI 返回的完整列表 | 先核对目标，必要时显式填写 Toy ID；不要直接重试创建 |
+| `v0.1.0-beta.1` 在刚创建的 Toy 审核期间报 `Toy listing contains unverifiable ownership or slug` | 平台列表项可能已有正确归属，却暂时没有可核对 slug 的 URL；[首次失败运行](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/1)在预览前停止，没有发送 Toy 写请求 | 先到 B 站确认目标 Toy 与审核状态；待列表出现可核对的 URL 后，可重跑原预览（[同一运行第 2 次尝试已成功](https://github.com/drdavid-kor/bilibili-toy-existing-example/actions/runs/40543593753/attempts/2)）。也可升级到修复版 `v0.1.0-beta.2` 后重新预览。不要改 slug 或直接发布 Release 来绕过核对 |
 | 会话过期或身份不符 | GitHub Secret 和预期 B 站账号 | 按[认证说明](authentication.md)更新会话后重试；不要粘贴会话到 Issue 或聊天 |
 | 提审被平台明确拒绝 | CLI 返回的业务原因、元信息和内容 | 修复原因后重新触发；此前提审仍有记录 |
 | 提审结果待核实 | 原提交、包摘要、Toy ID/slug、B 站后台状态，以及运行 Summary 中的 Deployment ID | 先在 B 站核实**这一次请求**；然后在手动工作流选择 `resolve-unknown`，填写 `deployment-id` 和 `resolution=accepted` 或 `not-accepted`。该操作不重提 Toy |
 | 提审成功但关联保存失败 | Summary 中的 Toy ID、Deployment 权限和 GitHub API 错误 | 修复权限、显式补填 ID 或恢复记录；不要因记录失败再次提审 |
+
+`v0.1.0-beta.2` 的审核中作品处理逻辑：若仓库已有经核对的 binding（账号、Toy ID 与 slug），即使平台列表暂未给该作品 URL，也可用该绑定继续识别目标；这项修复仍需 CI 与外部仓库验证。若没有可信绑定，而列表中任一作品缺 URL，Action 仍停止自动创建或接管。显式 `toy_id` 也不能绕过缺 URL 时的归属与 slug 核对。首次创建已被平台接受、但 GitHub 关联保存失败且 URL 暂缺时，应保留已返回的 Toy ID 和 Deployment 记录，等能核实 URL 后恢复关联；不要把已接受的请求标为 `not-accepted`，也不要重新创建。
 
 对静态包，Toy 运行于 `/toy/<slug>/`，首页引用 `/assets/...` 容易指向站点根路径。Vite 可配置合适的 base，React/Vue 的 history 路由需要在静态环境下实际验证；示例采用 hash 路由。外部 API、第三方登录和浏览器存储不会因静态预检通过而自动兼容。
 

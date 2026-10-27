@@ -29,5 +29,28 @@
     "mtime": 1793117838,
     "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
     "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+  },
+  "after_metadata_sync": {
+    "observed_at_utc": "2026-10-27T16:42:39.701579+00:00",
+    "snapshot": {
+      "id": 48653775407104,
+      "title": "GitHub 到 Toy 自动发布演示",
+      "category": "TOOL",
+      "visibility": "LINK_ONLY",
+      "status": "published",
+      "poster_url_sha256": "105ed6bc2538f8962c2b8d32c8bab99f07fb4e3ecdb20c37891f20a18ab174da",
+      "icon_url_sha256": "196ea95bb7b5355e537fbbb629b6d8d452c48abf79df423aa7162cc06202ffbf"
+    },
+    "expected_explicit_fields": {
+      "title": "GitHub 到 Toy 自动发布演示",
+      "category": "TOOL"
+    },
+    "retained_unselected_fields": {
+      "id": true,
+      "visibility": true,
+      "poster_url_sha256": true,
+      "icon_url_sha256": true
+    },
+    "evidence_limit": "Observed after local response-shape probe and hosted metadata sync using the same fields; this snapshot does not attribute the title change uniquely to one request."
   }
 }

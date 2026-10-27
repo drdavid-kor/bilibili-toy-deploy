@@ -6,7 +6,7 @@
 
 先确认入口文件、包管理器、构建命令及输出目录，并运行一次现有构建和测试。不要假定所有项目的产物都在 `dist/`。后端或服务端渲染项目需要另行判断；第一版不承诺自动迁移这些功能。
 
-从本项目 GitHub Releases 下载并解压一个已发布版本，将其中 `examples/workflows/toy.yml` 复制到现有项目的 `.github/workflows/`。示例当前指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`，该标签未发布前不能在其他仓库运行。将构建步骤改为项目原有命令，并把 `toy.config.json` 的 `directory` 设置为实际输出目录。保留已经使用的其他部署工作流。Action 接收**构建好的目录**，不会自动识别或修理构建命令。Action 标签、示例工作流和配置 schema 应使用同一发布版本。
+从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载并解压源码，将其中 `examples/workflows/toy.yml` 复制到现有项目的 `.github/workflows/`。示例指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2`。将构建步骤改为项目原有命令，并把 `toy.config.json` 的 `directory` 设置为实际输出目录。保留已经使用的其他部署工作流。Action 接收**构建好的目录**，不会自动识别或修理构建命令。Action 标签、示例工作流和配置 schema 应使用同一发布版本。
 
 ## 2 让页面在 Toy 的子路径中运行
 
@@ -32,6 +32,12 @@ Toy 页面位于 `/toy/<slug>/`。检查首页 HTML 中的脚本、样式、图�
 
 ## 用 Skill 加速
 
-公开发行版发布且安装命令验证后，可运行 `npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github`。然后向编程助手提出：“检查并适配当前 Vite 项目，让它在 Toy 子路径运行，接入发布 Action，保留现有部署流程。”Skill 会检查路由、资源路径和构建产物，直接完成通常的代码修改与工作流接入。若必须迁移后端、替换登录或重做存储，它会说明影响并等待你决定。改造后仍需验证真实页面和工作流结果。
+Codex 用户可运行已验证的安装命令：
+
+```bash
+npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
+```
+
+然后向编程助手提出：“检查并适配当前 Vite 项目，让它在 Toy 子路径运行，接入发布 Action，保留现有部署流程。”Skill 会检查路由、资源路径和构建产物，直接完成通常的代码修改与工作流接入。若必须迁移后端、替换登录或重做存储，它会说明影响并等待你决定。改造后仍需验证真实页面和工作流结果。本人试用可按[简短试用指南](verification/user-trial.md)记录卡点。
 
 故障恢复见[故障排查](troubleshooting.md)。

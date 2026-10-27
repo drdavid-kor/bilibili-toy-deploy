@@ -10,13 +10,13 @@
 
 ## 1 建立最小项目
 
-在本项目的 GitHub Releases 页面选择一个已发布版本，下载并解压该版本的源码。进入解压后的目录，运行脚手架。下面的路径是示例，请把 `./my-toy`、slug 和标题改成自己的值：
+从 [v0.1.0-beta.2 发布页](https://github.com/drdavid-kor/bilibili-toy-deploy/releases/tag/v0.1.0-beta.2)下载并解压源码。进入解压后的目录，运行脚手架。下面的路径是示例，请把 `./my-toy`、slug 和标题改成自己的值：
 
 ```bash
 python3 scripts/scaffold.py --template html --destination ./my-toy --slug my-toy --title "My Toy"
 ```
 
-脚手架会在**新目录**建立纯 HTML 项目，并复制同版本的 `examples/workflows/toy.yml`。若准备使用 Vite，把 `--template html` 改成 `--template vite`。React 和 Vue 项目的接入参考同版本 `examples/react/`、`examples/vue/`。这个新目录才是你的 Toy 仓库；不要把 Action 的整个开发仓库当作作品发布。示例工作流目前指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1`；该标签公开发布前，其他仓库不能运行这个 Action。
+脚手架会在**新目录**建立纯 HTML 项目，并复制同版本的 `examples/workflows/toy.yml`。若准备使用 Vite，把 `--template html` 改成 `--template vite`。React 和 Vue 项目的接入参考同版本 `examples/react/`、`examples/vue/`。这个新目录才是你的 Toy 仓库；不要把 Action 的整个开发仓库当作作品发布。示例工作流指向 `drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2`。
 
 模板提供可访问的首页、相对资源路径、一个能运行的构建命令，以及 `toy.config.json`。它还自带 `toy-assets/poster.png`（1200×900）和 `toy-assets/icon.png`（256×256），配置已经引用这些图片，因此首次上手不用制作素材。正式提审前请换成与作品一致的封面和图标。填写自己的 slug 和标题。首次创建默认 `link-only`。slug 是作品地址的一部分，发布后不能靠普通更新修改；请在首次提审前检查拼写。[配置说明](configuration.md)解释各字段。
 
@@ -65,4 +65,10 @@ git push -u origin main
 
 ## 用 Skill 加速
 
-公开发行版发布且安装命令验证后，可运行 `npx skills add drdavid-kor/bilibili-toy-deploy --skill toy-github`，然后对编程助手说：“用 toy-github 在这个空目录创建纯 HTML Toy 项目，并接入 GitHub 发布。”Skill 会建立最小项目和工作流；你仍需在 GitHub 安全地设置会话，并检查真实预览。只有一个创意时，Skill 不会自动替你完成全部业务功能。
+Codex 用户可运行已验证的安装命令：
+
+```bash
+npx --yes skills@latest add drdavid-kor/bilibili-toy-deploy --skill toy-github --agent codex --yes --copy --json
+```
+
+然后对编程助手说：“用 toy-github 在这个空目录创建纯 HTML Toy 项目，并接入 GitHub 发布。”Skill 会建立最小项目和工作流；你仍需在 GitHub 安全地设置会话，并检查真实预览。只有一个创意时，Skill 不会自动替你完成全部业务功能。本人试用可按[简短试用指南](verification/user-trial.md)记录卡点。

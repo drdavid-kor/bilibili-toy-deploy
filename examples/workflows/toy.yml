@@ -46,7 +46,7 @@ jobs:
       expected-package-sha: ${{ steps.plan.outputs.expected-package-sha }}
     steps:
       - id: plan
-        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2
         with:
           mode: plan
   build:
@@ -72,7 +72,7 @@ jobs:
             npm run build
           fi
           # Plain HTML starter already has its files under site/.
-      - uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+      - uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2
         with:
           mode: check
           config: toy.config.json
@@ -116,7 +116,7 @@ jobs:
           path: ${{ runner.temp }}/toy-bundle
           merge-multiple: true
       - id: publish
-        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.1
+        uses: drdavid-kor/bilibili-toy-deploy@v0.1.0-beta.2
         with:
           mode: ${{ needs.plan.outputs.operation }}
           bundle: ${{ runner.temp }}/toy-bundle

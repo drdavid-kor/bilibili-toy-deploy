@@ -1,6 +1,6 @@
 # GitHub Actions 的 Toy 登录配置
 
-Toy CLI 使用浏览器完成 B 站 OAuth 登录。公开安装说明只介绍 `toy login` 和会话过期后重新登录；本项目使用本地会话令牌在 GitHub 托管 Runner 中登录，属于实验性兼容路径。托管 Runner 已完成登录、预览、GitHub 记录写入及一次首次创建提审；会话寿命和更新链路仍需分别验收，见[验收记录](verification/acceptance.md)。[官方安装与登录说明](https://github.com/bilibili/toy/blob/main/skills/toy/references/installation.md)
+Toy CLI 使用浏览器完成 B 站 OAuth 登录。公开安装说明只介绍 `toy login` 和会话过期后重新登录；本项目使用本地会话令牌在 GitHub 托管 Runner 中登录，属于实验性兼容路径。托管 Runner 已完成登录、预览、GitHub 记录写入、首次创建及内容更新提审；故意换入无效 Secret 时会明确失败，重新设置有效 Secret 后预览与更新恢复成功。自然会话寿命和本地登出对旧会话的影响仍未知，见[验收记录](verification/acceptance.md)。[官方安装与登录说明](https://github.com/bilibili/toy/blob/main/skills/toy/references/installation.md)
 
 ## 前提
 

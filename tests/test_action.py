@@ -199,6 +199,30 @@ class ActionTests(unittest.TestCase):
         with self.assertRaisesRegex(action.Failure, "ownership"):
             toy.toys()
 
+    def test_auditing_listing_without_url_keeps_verified_id_only(self):
+        toy = object.__new__(action.Toy)
+        toy.uid = 123
+
+        def listing(item):
+            return {"total": 1, "pn": 1, "ps": 50, "list": [item]}
+
+        pending = {"id": 42, "status": "auditing", "user_info": {"mid": 123}}
+        toy.call = lambda argv: listing(pending)
+        row = toy.toys()[0]
+        self.assertEqual(row["id"], 42)
+        self.assertIsNone(row["slug"])
+        self.assertNotIn("url", row)
+        for bad in (
+            {**pending, "user_info": {"mid": 999}},
+            {**pending, "url": "https://foreign.example/toy/demo/index.html"},
+            {**pending, "url": "http://www.bilibili.com/toy/demo/index.html"},
+            {**pending, "url": "not a URL"},
+        ):
+            with self.subTest(item=bad):
+                toy.call = lambda argv: listing(bad)
+                with self.assertRaisesRegex(action.Failure, "ownership or slug"):
+                    toy.toys()
+
     def test_unique_slug_adoption_saves_binding_and_conflict_stops(self):
         gh = FakeGitHub()
         toy = FakeToy()
@@ -209,6 +233,47 @@ class ActionTests(unittest.TestCase):
             action.resolve_target(FakeGitHub([self.binding(toy_id=42)]), toy, {"slug": "demo", "toy_id": 23}, "account-hash", SHA)
         with self.assertRaisesRegex(action.Failure, "another Toy account"):
             action.resolve_target(FakeGitHub([self.binding(account="other")]), toy, {"slug": "demo"}, "account-hash", SHA)
+
+    def test_bound_toy_without_url_can_preview_and_update_but_conflicts_stop(self):
+        path = self.bundle()
+        gh = FakeGitHub([self.binding()])
+        toy = FakeToy(items=[{"id": 42, "slug": None}], response={"preview_url": "https://www.bilibili.com/toy/preview/demo"})
+        with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+            action.write_operation(self.operation_args(path, mode="preview"))
+        self.assertEqual(toy.calls[0][0][0:2], ["update", "42"])
+        self.assertFalse(toy.calls[0][1])
+
+        submit_toy = FakeToy(items=[{"id": 42, "slug": None}], response={"status": "auditing"})
+        with patch.object(action, "GitHub", return_value=FakeGitHub([self.binding()])), \
+             patch.object(action, "Toy", return_value=submit_toy):
+            action.write_operation(self.operation_args(path))
+        self.assertEqual(submit_toy.calls[0][0][0:2], ["update", "42"])
+        self.assertTrue(submit_toy.calls[0][1])
+
+        for items in (
+            [{"id": 42, "slug": "different"}],
+            [{"id": 42, "slug": None}, {"id": 43, "slug": "demo"}],
+        ):
+            with self.subTest(items=items):
+                with self.assertRaisesRegex(action.Failure, "Toy ID, slug or account mismatch"):
+                    action.resolve_target(FakeGitHub([self.binding()]), FakeToy(items=items), {"slug": "demo"}, "account-hash", SHA)
+
+    def test_unbound_unknown_url_blocks_automatic_target_selection(self):
+        pending = {"id": 43, "slug": None}
+        known = {"id": 42, "slug": "demo"}
+        for items in ([pending], [known, pending]):
+            with self.subTest(items=items):
+                gh = FakeGitHub()
+                with self.assertRaisesRegex(action.Failure, "no verifiable slug"):
+                    action.resolve_target(gh, FakeToy(items=items), {"slug": "demo"}, "account-hash", SHA)
+                self.assertEqual(gh.saved, [])
+
+        gh = FakeGitHub()
+        chosen = action.resolve_target(gh, FakeToy(items=[known, pending]), {"slug": "demo", "toy_id": 42}, "account-hash", SHA)
+        self.assertEqual(chosen["id"], 42)
+        self.assertEqual(gh.saved[0]["payload"]["toy_id"], 42)
+        with self.assertRaisesRegex(action.Failure, "Toy ID, slug or account mismatch"):
+            action.resolve_target(FakeGitHub(), FakeToy(items=[known, pending]), {"slug": "demo", "toy_id": 43}, "account-hash", SHA)
 
     def test_new_toy_requires_both_images_before_preview_or_record(self):
         path = self.bundle()
@@ -326,6 +391,91 @@ class ActionTests(unittest.TestCase):
         self.assertEqual([state for _, state, _ in gh.statuses], ["success", "success"])
         self.assertEqual(correct_toy.calls, [])
 
+    def test_unknown_recovery_with_missing_url_requires_original_toy_id(self):
+        class RecoveryGitHub(FakeGitHub):
+            def __init__(self, toy_id):
+                super().__init__(states={9: "error"})
+                self.toy_id = toy_id
+
+            def call(self, path):
+                if path == "deployments/9":
+                    return {"id": 9, "payload": {
+                        "tool": action.TOOL, "kind": "submission", "sha": SHA,
+                        "slug": "demo", "account": "account-hash", "toy_id": self.toy_id,
+                    }}
+                return super().call(path)
+
+        args = SimpleNamespace(deployment_id=9, resolution="accepted")
+        known_gh, known_toy = RecoveryGitHub(42), FakeToy(items=[{"id": 42, "slug": None}])
+        with patch.object(action, "GitHub", return_value=known_gh), patch.object(action, "Toy", return_value=known_toy):
+            action.resolve_unknown(args)
+        self.assertEqual(known_gh.saved[0]["payload"]["toy_id"], 42)
+        self.assertEqual(known_gh.statuses[-1][1], "success")
+        self.assertEqual(known_toy.calls, [])
+
+        new_gh, new_toy = RecoveryGitHub(None), FakeToy(items=[{"id": 42, "slug": None}])
+        with patch.object(action, "GitHub", return_value=new_gh), patch.object(action, "Toy", return_value=new_toy):
+            with self.assertRaisesRegex(action.Failure, "listing URL is unavailable"):
+                action.resolve_unknown(args)
+        self.assertEqual(new_gh.saved, [])
+        self.assertEqual(new_gh.statuses, [])
+        self.assertEqual(new_toy.calls, [])
+
+    def test_accepted_create_with_record_failure_cannot_be_created_again(self):
+        (self.base / "assets" / "icon.png").write_bytes(b"icon")
+        config = json.loads(self.config.read_text())
+        config["create"]["icon"] = "assets/icon.png"
+        self.config.write_text(json.dumps(config))
+
+        class StorageGitHub(FakeGitHub):
+            def __init__(self, fail_at):
+                super().__init__()
+                self.fail_at = fail_at
+
+            def call(self, path):
+                if path.startswith("deployments/"):
+                    return next(r for r in self.records_data if str(r["id"]) == path.split("/")[-1])
+                return super().call(path)
+
+            def record(self, sha, slug, kind, **payload):
+                if self.fail_at == "binding" and kind == "binding":
+                    self.fail_at = None
+                    raise action.Failure("binding record unavailable")
+                result = super().record(sha, slug, kind, **payload)
+                result["payload"].update(tool=action.TOOL, schema=action.SCHEMA)
+                self.records_data.append(result)
+                return result
+
+            def status(self, record, state, description):
+                if self.fail_at == "submission-status" and record["payload"]["kind"] == "submission" and state == "success":
+                    self.fail_at = None
+                    raise action.Failure("status unavailable")
+                super().status(record, state, description)
+                self.states[record["id"]] = state
+
+        for failure_point in ("binding", "submission-status"):
+            with self.subTest(failure_point=failure_point):
+                path = self.bundle("bundle-" + failure_point)
+                manifest = action.jsonfile(path / "manifest.json")
+                manifest.update(preview=True, account="account-hash", toy_id=None, preview_run="17")
+                action.save(path / "manifest.json", manifest)
+                gh = StorageGitHub(failure_point)
+                toy = FakeToy(items=[], response={"id": 99, "status": "auditing"})
+                args = self.operation_args(path)
+                with patch.object(action, "GitHub", return_value=gh), patch.object(action, "Toy", return_value=toy):
+                    with self.assertRaisesRegex(action.Failure, "Preserve Toy ID 99 and reconcile Deployment 100"):
+                        action.write_operation(args)
+                    self.assertEqual(len(toy.calls), 1)
+                    self.assertEqual(toy.calls[0][0][0], "create")
+                    toy.items = [{"id": 99, "slug": "demo"}]
+                    with self.assertRaisesRegex(action.Failure, "Previous write outcome is unknown"):
+                        action.write_operation(args)
+                    self.assertEqual(len(toy.calls), 1)
+                    action.resolve_unknown(SimpleNamespace(deployment_id=100, resolution="accepted"))
+                    action.write_operation(args)
+                self.assertEqual(len(toy.calls), 1)
+                self.assertEqual(gh.states[100], "success")
+
     def test_manual_override_cannot_run_from_release_event(self):
         path = self.bundle()
         gh, toy = FakeGitHub([self.binding()]), FakeToy()
@@ -391,6 +541,79 @@ class ActionTests(unittest.TestCase):
              patch.object(action, "output"):
             with self.assertRaisesRegex(action.Failure, "No usable successful preview artifact"):
                 action.plan(SimpleNamespace(workflow_path=".github/workflows/toy.yml"))
+
+    def test_release_stops_on_missing_or_expired_preview_artifact(self):
+        event = self.base / "release.json"
+        event.write_text(json.dumps({"release": {
+            "id": 77, "tag_name": "v1", "draft": False, "prerelease": False,
+        }}))
+
+        class ArtifactGitHub(FakePlanningGitHub):
+            def __init__(self, artifacts):
+                super().__init__()
+                self.artifacts = artifacts
+
+            def pages(self, path, key=None):
+                if path == "actions/runs/17/artifacts":
+                    return self.artifacts
+                return super().pages(path, key)
+
+        for artifacts in ([], [{"id": 23, "name": "toy-preview-" + SHA, "expired": True}]):
+            with self.subTest(artifacts=artifacts):
+                outputs = {}
+                with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "release", "GITHUB_EVENT_PATH": str(event)}), \
+                     patch.object(action, "GitHub", return_value=ArtifactGitHub(artifacts)), \
+                     patch.object(action, "output", side_effect=lambda key, value: outputs.__setitem__(key, value)):
+                    with self.assertRaisesRegex(action.Failure, "No usable successful preview artifact"):
+                        action.plan(SimpleNamespace(workflow_path=".github/workflows/toy.yml"))
+                self.assertEqual(outputs["operation"], "submit")
+                self.assertEqual(outputs["build"], "false")
+                self.assertNotIn("artifact-id", outputs)
+
+    def test_binding_lookup_scans_deployment_second_page(self):
+        github = object.__new__(action.GitHub)
+        paths = []
+        binding = {"id": 101, "payload": {
+            "tool": action.TOOL, "schema": action.SCHEMA, "kind": "binding",
+            "slug": "demo", "account": "account-hash", "toy_id": 42,
+        }}
+
+        def page(path):
+            paths.append(path)
+            if path.endswith("page=1"):
+                return [{"id": n, "payload": {"tool": "other"}} for n in range(1, 101)]
+            if path.endswith("page=2"):
+                return [binding]
+            raise AssertionError("Unexpected pagination request")
+
+        github.call = page
+        self.assertEqual(github.records("demo", "binding"), [binding])
+        self.assertEqual(len(paths), 2)
+
+    def test_fork_pull_request_plan_only_checks_package(self):
+        event = self.base / "fork-pr.json"
+        event.write_text(json.dumps({"pull_request": {"head": {"repo": {"fork": True}}}}))
+        outputs = {}
+
+        class ForkGitHub(FakePlanningGitHub):
+            def call(self, path):
+                if path != "":
+                    raise AssertionError("Fork PR should not inspect Releases or deployments")
+                return super().call(path)
+
+            def pages(self, path, key=None):
+                raise AssertionError("Fork PR should not read deployment artifacts")
+
+        with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "pull_request", "GITHUB_EVENT_PATH": str(event)}), \
+             patch.object(action, "GitHub", return_value=ForkGitHub()), \
+             patch.object(action, "Toy") as toy_constructor, \
+             patch.object(action, "output", side_effect=lambda key, value: outputs.__setitem__(key, value)):
+            action.plan(SimpleNamespace(workflow_path=".github/workflows/toy.yml"))
+            toy_constructor.assert_not_called()
+        self.assertEqual(outputs["operation"], "check")
+        self.assertEqual(outputs["build"], "true")
+        self.assertEqual(outputs["release-id"], "")
+        self.assertNotIn("artifact-id", outputs)
 
 
 if __name__ == "__main__":

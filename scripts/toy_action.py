@@ -213,9 +213,17 @@ class Toy:
             if expected is None:expected=data['total']
             elif data['total']!=expected:raise Failure('Toy list changed during pagination. Retry the read.')
             for item in data['list']:
-                url=urllib.parse.urlparse(item.get('url',''));match=re.fullmatch(r'/toy/([A-Za-z0-9_-]+)(?:/index\.html|/)?',url.path)
-                if url.scheme!='https' or url.hostname!='www.bilibili.com' or not valid_int(item.get('id')) or not match or item.get('user_info',{}).get('mid')!=self.uid:raise Failure('Toy listing contains unverifiable ownership or slug')
-                item={**item,'slug':match.group(1)};rows.append(item)
+                if not isinstance(item,dict) or not valid_int(item.get('id')) or not isinstance(item.get('user_info'),dict) or item['user_info'].get('mid')!=self.uid:raise Failure('Toy listing contains unverifiable ownership or slug')
+                raw_url=item.get('url')
+                # A newly submitted Toy may have no URL while auditing. Keep its
+                # verified ID; absence of a URL must never prove a slug is free.
+                slug=None
+                if raw_url is not None and raw_url!='':
+                    if not isinstance(raw_url,str):raise Failure('Toy listing contains unverifiable ownership or slug')
+                    url=urllib.parse.urlparse(raw_url);match=re.fullmatch(r'/toy/([A-Za-z0-9_-]+)(?:/index\.html|/)?',url.path)
+                    if url.scheme!='https' or url.hostname!='www.bilibili.com' or not match:raise Failure('Toy listing contains unverifiable ownership or slug')
+                    slug=match.group(1)
+                rows.append({**item,'slug':slug})
             if len(rows)==expected:
                 if len({x['id'] for x in rows})!=len(rows):raise Failure('Duplicate Toy IDs in listing')
                 return rows
@@ -236,13 +244,17 @@ def resolve_target(gh,toy,cfg,account,sha):
     if binding and binding.get('account')!=account:raise Failure('Stored association belongs to another Toy account. Restore the original account or explicitly reset association records.')
     toyid=cfg.get('toy_id')
     if binding and toyid and binding.get('toy_id')!=toyid:raise Failure('Explicit Toy ID conflicts with stored association')
-    if binding:toyid=binding.get('toy_id')
+    if binding:
+        toyid=binding.get('toy_id')
+        if not valid_int(toyid):raise Failure('Stored Toy association has an invalid ID; reconcile the record before publishing')
     items=toy.toys();matches=[x for x in items if x['slug']==cfg['slug']]
     if len(matches)>1:raise Failure('More than one Toy matches slug; resolve the target explicitly')
     if toyid:
         chosen=next((x for x in items if x['id']==toyid),None)
-        if not chosen or chosen['slug']!=cfg['slug']:raise Failure('Toy ID, slug or account mismatch')
-    else:chosen=matches[0] if matches else None
+        if not chosen or (chosen['slug']!=cfg['slug'] and not (binding and chosen['slug'] is None)) or any(x['id']!=toyid for x in matches):raise Failure('Toy ID, slug or account mismatch')
+    else:
+        if any(x['slug'] is None for x in items):raise Failure('A Toy has no verifiable slug yet, possibly while auditing. Wait for its URL before automatic creation or adoption; do not create a duplicate.')
+        chosen=matches[0] if matches else None
     if chosen and not binding:
         rec=gh.record(sha,cfg['slug'],'binding',account=account,toy_id=chosen['id']);gh.status(rec,'success','Association saved; no content submitted')
     return chosen
@@ -376,10 +388,15 @@ def resolve_unknown(args):
         try:
             account=toy.account()
             if account!=payload['account']:raise Failure('Account mismatch during reconciliation')
-            matches=[x for x in toy.toys() if x['slug']==payload['slug']]
-            if len(matches)!=1:raise Failure('Cannot uniquely restore Toy ID')
-            if payload.get('toy_id') and matches[0]['id']!=payload['toy_id']:raise Failure('Recovered Toy ID differs from original request')
-            bind=gh.record(payload['sha'],payload['slug'],'binding',account=account,toy_id=matches[0]['id']);gh.status(bind,'success','Association recovered after user verification')
+            items=toy.toys();matches=[x for x in items if x['slug']==payload['slug']]
+            if payload.get('toy_id'):
+                target=next((x for x in items if x['id']==payload['toy_id']),None)
+                if not target or target['slug'] not in (None,payload['slug']) or any(x['id']!=target['id'] for x in matches):raise Failure('Recovered Toy ID differs from original request')
+            else:
+                if any(x['slug'] is None for x in items):raise Failure('Cannot uniquely restore Toy ID while a listing URL is unavailable. Preserve the returned Toy ID and wait; do not mark an accepted request not-accepted.')
+                if len(matches)!=1:raise Failure('Cannot uniquely restore Toy ID')
+                target=matches[0]
+            bind=gh.record(payload['sha'],payload['slug'],'binding',account=account,toy_id=target['id']);gh.status(bind,'success','Association recovered after user verification')
             gh.status(rec,'success','User verified this exact request was accepted; no new request sent')
         finally:toy.close()
     else:raise Failure('Choose accepted or not-accepted only after checking Bilibili')
