@@ -1,0 +1,25 @@
+name: P0 hosted-runner verification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned official CLI
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/toy-bin"
+          curl --fail --silent --show-error --location https://boss.hdslb.com/toy-cli/toy/releases/v0.6.4/toy_linux_amd64 -o "$RUNNER_TEMP/toy-bin/toy"
+          echo 'd5d1377ffd7b037fb23c3f48ba77c2230cd446976dec74930bf99fadfb0dcf94  '"$RUNNER_TEMP/toy-bin/toy" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/toy-bin/toy"
+          echo "$RUNNER_TEMP/toy-bin" >> "$GITHUB_PATH"
+      - name: Verify isolated authentication and GitHub state
+        env:
+          TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_SESSION_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          TOY_NO_UPDATE_CHECK: '1'
+        run: python3 .github/scripts/p0_probe.py

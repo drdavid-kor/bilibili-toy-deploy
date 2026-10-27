@@ -1,0 +1,12 @@
+.DS_Store
+.local/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.log
+.toy/
+.toy-state/
