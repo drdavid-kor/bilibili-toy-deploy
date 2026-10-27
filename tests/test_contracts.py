@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import struct
 import unittest
 from pathlib import Path
 
@@ -20,6 +21,14 @@ class PublicContractTests(unittest.TestCase):
                 project = ROOT / relative
                 config = config_load(project / "toy.config.json")
                 self.assertEqual(config["create"]["visibility"], "link-only")
+                for field, dimensions in (("poster", (1200, 900)), ("icon", (256, 256))):
+                    image = project / config["create"][field]
+                    self.assertTrue(image.is_file())
+                    raw = image.read_bytes()
+                    self.assertEqual(raw[:8], b"\x89PNG\r\n\x1a\n")
+                    self.assertEqual(struct.unpack(">II", raw[16:24]), dimensions)
+                    if field == "icon":
+                        self.assertLessEqual(len(raw), 512 * 1024)
                 if relative == "templates/html":
                     self.assertEqual(config["directory"], "site")
                     self.assertTrue((project / "site/index.html").is_file())

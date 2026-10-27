@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bilibili Toy deploy configuration",
+  "description": "Configuration for one static Toy. Credentials belong in GitHub Actions Secrets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slug", "directory"],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "description": "Immutable Toy URL component. An existing Toy with this slug under the authenticated account is adopted automatically."
+    },
+    "directory": {
+      "$ref": "#/$defs/relativePath",
+      "description": "Static build output relative to the project containing toy.config.json; it must contain index.html at its root."
+    },
+    "toy_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional explicit existing Toy ID. It is checked against the current account and slug."
+    },
+    "create": {
+      "$ref": "#/$defs/metadata",
+      "description": "Applied only when creating a Toy. visibility defaults to link-only."
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata",
+      "description": "Applied only by a separate manual sync-metadata operation. Omitted fields retain their platform values."
+    }
+  },
+  "$defs": {
+    "nonblank": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?=.*\\S)[^\\u0000]+$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000]+$",
+      "description": "Repository-relative path without parent traversal, absolute prefix, or backslash. Symlinks are rejected by the Action."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {"$ref": "#/$defs/nonblank"},
+        "category": {
+          "type": "string",
+          "enum": ["GAME", "INTERACTIVE_PLAY", "TOOL", "TEST", "GUIDE", "COLLECTION", "OTHER"]
+        },
+        "visibility": {"type": "string", "enum": ["link-only", "public"]},
+        "icon": {"$ref": "#/$defs/relativePath"},
+        "poster": {"$ref": "#/$defs/relativePath"},
+        "theme": {"type": "string", "enum": ["light", "dark"]},
+        "watermark": {"type": "boolean"},
+        "activity": {"$ref": "#/$defs/nonblank"}
+      }
+    }
+  }
+}

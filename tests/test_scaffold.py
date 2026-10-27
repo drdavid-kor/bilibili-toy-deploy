@@ -24,6 +24,8 @@ class ScaffoldTests(unittest.TestCase):
             self.assertEqual(config["directory"], "site")
             self.assertEqual(config["create"]["title"], "A & B")
             self.assertTrue((destination / "site/assets/main.js").is_file())
+            self.assertTrue((destination / config["create"]["poster"]).is_file())
+            self.assertTrue((destination / config["create"]["icon"]).is_file())
             self.assertTrue((destination / ".github/workflows/toy.yml").is_file())
             self.assertIn("A &amp; B", (destination / "site/index.html").read_text(encoding="utf-8"))
 
@@ -57,8 +59,12 @@ class ScaffoldTests(unittest.TestCase):
             self.assertEqual(config["directory"], "dist")
             self.assertEqual(config["slug"], "vite-toy")
             self.assertTrue((destination / "package-lock.json").is_file())
+            self.assertTrue((destination / config["create"]["poster"]).is_file())
+            self.assertTrue((destination / config["create"]["icon"]).is_file())
             self.assertIn("base: './'", (destination / "vite.config.js").read_text(encoding="utf-8"))
             self.assertTrue((destination / ".github/workflows/toy.yml").is_file())
+            self.assertFalse((destination / "node_modules").exists())
+            self.assertFalse((destination / "dist").exists())
 
 
 if __name__ == "__main__":

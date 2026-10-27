@@ -37,7 +37,14 @@ def scaffold(template: str, destination: Path, slug: str, title: str, workflow: 
     if not workflow.is_file():
         raise FileNotFoundError(f"workflow template is unavailable: {workflow}")
 
-    shutil.copytree(source, destination, dirs_exist_ok=True)
+    # Local template build checks may leave generated output in the source tree.
+    # Keep starter projects limited to source files even before release cleanup.
+    shutil.copytree(
+        source,
+        destination,
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("node_modules", "dist", ".git", "__pycache__", ".DS_Store"),
+    )
     config_path = destination / "toy.config.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["slug"] = slug

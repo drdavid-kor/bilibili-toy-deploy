@@ -186,7 +186,14 @@ class Toy:
             match=re.search(r'\bcode[=:]\s*(\d+)\b',p.stderr)
             if code is None and match:code=int(match.group(1))
             if code in (307001,307029):raise Failure('Toy session expired; log in locally and replace TOY_SESSION_TOKEN.')
-            if code is not None:raise Failure(f'Toy rejected the request (code {code}). Inspect the platform; raw responses are not logged.')
+            if code is not None:
+                message=data.get('message','') if isinstance(data,dict) else ''
+                found=re.search(r'\bmessage=(.*)',p.stderr)
+                if not message and found:message=found.group(1)
+                message=str(message).replace(self.env.get('TOY_CLI_SESSION_TOKEN',''),'[redacted]') if self.env.get('TOY_CLI_SESSION_TOKEN') else str(message)
+                message=re.sub(r'https?://\S+','[URL]',message)
+                message=re.sub(r'[A-Za-z0-9_=-]{48,}','[redacted]',message)
+                raise Failure(f'Toy rejected the request (code {code}): '+json.dumps(message[:240],ensure_ascii=False))
             if write:raise Unknown('Request outcome is unknown. Check Bilibili before retrying.')
             raise Failure('Toy query failed; check credentials, network and CLI compatibility')
         if not isinstance(data,dict):

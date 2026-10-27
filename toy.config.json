@@ -1,6 +1,15 @@
 {
   "slug": "toy-action-verification-20261027",
   "directory": "demo/site",
-  "create": {"title": "GitHub 到 Toy 发布流程演示", "category": "TOOL", "visibility": "link-only"},
-  "metadata": {"title": "GitHub 到 Toy 发布流程演示", "category": "TOOL"}
+  "create": {
+    "title": "GitHub 到 Toy 发布流程演示",
+    "category": "TOOL",
+    "visibility": "link-only",
+    "poster": "demo/toy-assets/poster.png",
+    "icon": "demo/toy-assets/icon.png"
+  },
+  "metadata": {
+    "title": "GitHub 到 Toy 发布流程演示",
+    "category": "TOOL"
+  }
 }

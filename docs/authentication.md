@@ -1,14 +1,23 @@
 # GitHub Actions 的 Toy 登录配置
 
-Toy CLI 使用浏览器完成 B 站 OAuth 登录。公开安装说明只介绍 `toy login` 和会话过期后重新登录；本项目使用本地会话令牌在 GitHub 托管 Runner 中登录，属于实验性兼容路径。功能发布前须在干净的托管 Runner 上验证，不能把“本机能用”当作已经通过。[官方安装与登录说明](https://github.com/bilibili/toy/blob/main/skills/toy/references/installation.md)
+Toy CLI 使用浏览器完成 B 站 OAuth 登录。公开安装说明只介绍 `toy login` 和会话过期后重新登录；本项目使用本地会话令牌在 GitHub 托管 Runner 中登录，属于实验性兼容路径。一次干净托管 Runner 的登录、预览与 GitHub 记录写入验证已通过；会话寿命和完整创建、更新链路仍需分别验收。[官方安装与登录说明](https://github.com/bilibili/toy/blob/main/skills/toy/references/installation.md)
 
 ## 前提
 
-你需要有 Toy 发布资格、能管理目标 GitHub 仓库的 Actions Secret，并在本机安装官方 `toy` CLI 与 GitHub CLI `gh`。发布工作流使用 `TOY_SESSION_TOKEN` Secret；该值相当于能操作你的 Toy 的登录凭据。请只给受信任的发布工作流使用。PR 工作流不会读取该 Secret。
+你需要有 Toy 发布资格、能管理目标 GitHub 仓库的 Actions Secret，并在本机安装官方 `toy` CLI 与 [GitHub CLI `gh`](https://cli.github.com/)。发布工作流使用 `TOY_SESSION_TOKEN` Secret；该值相当于能操作你的 Toy 的登录凭据。请只给受信任的发布工作流使用。PR 工作流不会读取该 Secret。
+
+在本项目的已发布源码目录，macOS Apple 芯片或 Linux x86-64 可用校验过 SHA-256 的安装脚本安装固定版本的官方 Toy CLI：
+
+```bash
+python3 scripts/install_cli.py --destination "$HOME/.local/bin/toy"
+"$HOME/.local/bin/toy" version
+```
+
+如果终端找不到 `toy`，把 `~/.local/bin` 加入当前终端的 `PATH`，或直接使用上面的绝对路径运行 `login`。Windows 及其他架构按[官方安装说明](https://github.com/bilibili/toy/blob/main/skills/toy/references/installation.md)安装；本项目安装脚本没有验证这些平台。安装 GitHub CLI 后运行 `gh auth login` 完成 GitHub 授权。
 
 ## 初次配置
 
-1. 本机执行 `toy login`，在浏览器完成 B 站授权。
+1. 本机执行 `toy login`，在浏览器完成 B 站授权。若 `toy` 未加入 `PATH`，使用 `"$HOME/.local/bin/toy" login`。
 2. 执行 `toy whoami --json` 核对当前账号。此命令只显示账号信息，不应显示会话令牌。
 3. 执行 `gh auth status`，确认 GitHub CLI 登录的是可以管理目标仓库的账号。
 4. 从本项目仓库运行以下命令，其中 `OWNER/REPO` 是**你的网页项目仓库**：

@@ -29,6 +29,7 @@ permissions:
   contents: read
 jobs:
   plan:
+    if: github.event_name != 'release' || !github.event.release.prerelease
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -4,7 +4,9 @@
   "create": {
     "title": "Vue Toy Example",
     "category": "TOOL",
-    "visibility": "link-only"
+    "visibility": "link-only",
+    "poster": "toy-assets/poster.png",
+    "icon": "toy-assets/icon.png"
   },
   "metadata": {}
 }

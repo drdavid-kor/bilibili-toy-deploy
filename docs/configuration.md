@@ -2,6 +2,8 @@
 
 项目在仓库根目录使用 `toy.config.json`。该文件保存目标 Toy 和首次创建的非敏感信息，不保存 B 站会话、GitHub 令牌或访问密码。纯 HTML 模板的起始示例如下；Vite 项目把 `directory` 改为 `dist`：
 
+编辑器可以使用[配置 JSON Schema](../schema/toy.config.schema.json)提示字段与取值；实际发布仍由 Action 校验目标路径、账号和平台返回值。
+
 ```json
 {
   "slug": "my-toy",
